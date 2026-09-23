@@ -1,7 +1,7 @@
 # 📋 Universidad Mariano Gálvez de Guatemala
 ## Facultad de Ingeniería en Sistemas de Información y Ciencias de la Computación
 ### Curso: Desarrollo Web / Ingeniería de Software
-### Evaluación de Segundo Parcial - Sección A
+### Evaluación de Segundo Parcial - Plan Diario
 
 ---
 
@@ -13,7 +13,7 @@ Evaluar la capacidad del estudiante para trabajar sobre un proyecto preexistente
 ## 🔗 Repositorio Base
 El estudiante debe partir del siguiente repositorio oficial:
 ```text
-https://github.com/ing-kelvin-castillo-umg/examen_seccion_a.git
+https://github.com/ing-kelvin-castillo-umg/segundo_parcial.git
 ```
 
 ---
@@ -23,8 +23,8 @@ https://github.com/ing-kelvin-castillo-umg/examen_seccion_a.git
 1. **Clonación del Repositorio:**
    Clone el proyecto en su máquina local:
    ```bash
-   git clone https://github.com/ing-kelvin-castillo-umg/examen_seccion_a.git
-   cd examen_seccion_a
+   git clone https://github.com/ing-kelvin-castillo-umg/segundo_parcial.git
+   cd segundo_parcial
    ```
 
 2. **Creación de la Rama de Trabajo (Feature Branch):**
@@ -136,7 +136,7 @@ Para la entrega final en la plataforma educativa, debe adjuntar:
 
 1. **Enlace a la Rama Creada en GitHub:**
    - Asegúrese de haber realizado `git push -u origin feature/<nombre>-<apellido>-<carne>`.
-   - Ejemplo: `https://github.com/ing-kelvin-castillo-umg/examen_seccion_a/tree/feature/juan-perez-0901-20-12345`
+   - Ejemplo: `https://github.com/ing-kelvin-castillo-umg/segundo_parcial/tree/feature/juan-perez-0901-20-12345`
 
 2. **Documento en Formato PDF:**
    El archivo PDF debe incluir una carátula formal y la evidencia visual de cada una de las 4 fases:
