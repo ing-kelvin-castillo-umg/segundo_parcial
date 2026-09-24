@@ -11,6 +11,7 @@ export class AuthService {
 
     if (typeof window !== "undefined") {
       localStorage.setItem("token", session.token);
+      localStorage.setItem("refreshToken", session.refreshToken);
       localStorage.setItem("user", JSON.stringify(session.user));
     }
 
@@ -22,9 +23,21 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
+    const refreshToken = this.getStoredRefreshToken();
+    
+    if (refreshToken) {
+      try {
+        await ApiClient.post("/api/auth/logout", { refreshToken });
+      } catch (error) {
+        console.error("Error revoking refresh token on backend:", error);
+        // Continue with logout even if backend request fails
+      }
+    }
+
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
     }
   }
@@ -33,6 +46,7 @@ export class AuthService {
     if (typeof window === "undefined") return null;
 
     const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userStr = localStorage.getItem("user");
 
     if (!token || !userStr) return null;
@@ -41,6 +55,7 @@ export class AuthService {
       const user = JSON.parse(userStr) as User;
       return {
         token,
+        refreshToken: refreshToken || "",
         user,
         isAuthenticated: true,
         isAdmin: user.roles?.includes("ROLE_ADMIN") || false,
@@ -48,5 +63,10 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  private static getStoredRefreshToken(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("refreshToken");
   }
 }

@@ -1,13 +1,14 @@
 package com.umg.examen.mapper;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.entity.Role;
 import com.umg.examen.entity.User;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class UserMapper {
@@ -31,7 +32,7 @@ public class UserMapper {
         return response;
     }
 
-    public AuthResponse toAuthResponse(User user, String token) {
+    public AuthResponse toAuthResponse(User user, String token, String refreshToken) {
         if (user == null) {
             return null;
         }
@@ -41,6 +42,7 @@ public class UserMapper {
 
         AuthResponse response = new AuthResponse();
         response.setToken(token);
+        response.setRefreshToken(refreshToken);
         response.setType("Bearer");
         response.setUsername(user.getUsername());
         response.setFullName(user.getFullName());

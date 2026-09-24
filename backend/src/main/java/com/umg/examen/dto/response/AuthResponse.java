@@ -1,14 +1,17 @@
 package com.umg.examen.dto.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.List;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Respuesta de autenticación con Token JWT")
 public class AuthResponse {
 
     @Schema(description = "Token de acceso JWT")
     private String token;
+
+    @Schema(description = "Token de refresco para renovar el access token")
+    private String refreshToken;
 
     @Schema(description = "Tipo de token", example = "Bearer")
     private String type = "Bearer";
@@ -27,8 +30,9 @@ public class AuthResponse {
 
     public AuthResponse() {}
 
-    public AuthResponse(String token, String type, String username, String fullName, String email, List<String> roles) {
+    public AuthResponse(String token, String refreshToken, String type, String username, String fullName, String email, List<String> roles) {
         this.token = token;
+        this.refreshToken = refreshToken;
         this.type = type != null ? type : "Bearer";
         this.username = username;
         this.fullName = fullName;
@@ -42,6 +46,14 @@ public class AuthResponse {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public String getType() {
