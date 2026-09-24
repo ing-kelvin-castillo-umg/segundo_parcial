@@ -1,16 +1,51 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = new Set([
+  "/api/auth/login",
+  "/api/auth/refresh",
+  "/api/auth/logout",
+]);
+
+let refreshPromise: Promise<boolean> | null = null;
+let sessionGeneration = 0;
+
 export class ApiClient {
-  private static getToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("token");
+  private static async refreshSession(): Promise<boolean> {
+    if (!refreshPromise) {
+      refreshPromise = fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        credentials: "same-origin",
+      })
+        .then((response) => {
+          if (response.ok) {
+            sessionGeneration += 1;
+            return true;
+          }
+          return false;
+        })
+        .catch(() => false)
+        .finally(() => {
+          refreshPromise = null;
+        });
     }
-    return null;
+
+    return refreshPromise;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  private static redirectAfterSessionExpiration(): void {
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
+      window.location.assign("/login");
+    }
+  }
+
+  static async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    hasRetried = false,
+    generationAtStart = sessionGeneration,
+  ): Promise<ApiResponseDto<T>> {
     const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    const token = this.getToken();
 
     const headers = new Headers(options.headers);
     headers.set("Accept", "application/json");
@@ -18,14 +53,22 @@ export class ApiClient {
       headers.set("Content-Type", "application/json");
     }
 
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: "same-origin",
     });
+
+    if (response.status === 401 && !hasRetried && !AUTH_ENDPOINTS_WITHOUT_REFRESH.has(url.split("?")[0])) {
+      const refreshed = generationAtStart !== sessionGeneration ? true : await this.refreshSession();
+
+      if (refreshed) {
+        return this.request<T>(endpoint, options, true, sessionGeneration);
+      }
+
+      this.redirectAfterSessionExpiration();
+    }
+
     const responseText = await response.text();
     let data: unknown = null;
 
@@ -56,10 +99,10 @@ export class ApiClient {
     return this.request<T>(endpoint, { method: "GET" });
   }
 
-  static post<T>(endpoint: string, body: unknown): Promise<ApiResponseDto<T>> {
+  static post<T>(endpoint: string, body?: unknown): Promise<ApiResponseDto<T>> {
     return this.request<T>(endpoint, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
   }
 

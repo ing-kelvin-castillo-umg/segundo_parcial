@@ -7,52 +7,60 @@ import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const session = AuthService.getStoredSession();
-    if (session) {
-      setUser(session.user);
-      setToken(session.token);
-    }
-    setLoading(false);
+    let active = true;
+
+    AuthService.getCurrentUser()
+      .then((currentUser) => {
+        if (active) setUser(currentUser);
+      })
+      .catch(() => {
+        if (active) setUser(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
     setUser(session.user);
-    setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
-    setUser(null);
-    setToken(null);
-    router.push("/");
+  const logout = async () => {
+    try {
+      await AuthService.logout();
+    } finally {
+      setUser(null);
+      router.push("/");
+    }
   };
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = !!user;
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
         isAuthenticated,
         isAdmin,
         loading,

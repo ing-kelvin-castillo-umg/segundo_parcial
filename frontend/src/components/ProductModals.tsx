@@ -195,8 +195,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         category,
       });
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Error al guardar el producto");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al guardar el producto");
     } finally {
       setLoading(false);
     }

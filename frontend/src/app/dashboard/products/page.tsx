@@ -47,8 +47,8 @@ export default function ProductsPage() {
       setLoading(true);
       const data = await ProductService.getAll();
       setProducts(data);
-    } catch (err: any) {
-      showToast(err.message || "Error al cargar la lista de productos", "error");
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : "Error al cargar la lista de productos", "error");
     } finally {
       setLoading(false);
     }

@@ -4,11 +4,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-@Schema(description = "Respuesta de autenticación con Token JWT")
+@Schema(description = "Respuesta interna de autenticación con Access Token y Refresh Token")
 public class AuthResponse {
 
     @Schema(description = "Token de acceso JWT")
-    private String token;
+    private String accessToken;
+
+    @Schema(description = "Refresh Token opaco")
+    private String refreshToken;
+
+    @Schema(description = "Duración del Access Token en segundos")
+    private long accessTokenExpiresInSeconds;
+
+    @Schema(description = "Duración del Refresh Token en segundos")
+    private long refreshTokenExpiresInSeconds;
 
     @Schema(description = "Tipo de token", example = "Bearer")
     private String type = "Bearer";
@@ -27,21 +36,36 @@ public class AuthResponse {
 
     public AuthResponse() {}
 
-    public AuthResponse(String token, String type, String username, String fullName, String email, List<String> roles) {
-        this.token = token;
-        this.type = type != null ? type : "Bearer";
-        this.username = username;
-        this.fullName = fullName;
-        this.email = email;
-        this.roles = roles;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public String getToken() {
-        return token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public long getAccessTokenExpiresInSeconds() {
+        return accessTokenExpiresInSeconds;
+    }
+
+    public void setAccessTokenExpiresInSeconds(long accessTokenExpiresInSeconds) {
+        this.accessTokenExpiresInSeconds = accessTokenExpiresInSeconds;
+    }
+
+    public long getRefreshTokenExpiresInSeconds() {
+        return refreshTokenExpiresInSeconds;
+    }
+
+    public void setRefreshTokenExpiresInSeconds(long refreshTokenExpiresInSeconds) {
+        this.refreshTokenExpiresInSeconds = refreshTokenExpiresInSeconds;
     }
 
     public String getType() {

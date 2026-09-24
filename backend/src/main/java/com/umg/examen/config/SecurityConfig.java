@@ -74,8 +74,13 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**"
                         ).permitAll()
-                        // Rutas públicas de Autenticación
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Login, renovación y cierre utilizan credenciales propias del flujo.
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/refresh",
+                                "/api/auth/logout"
+                        ).permitAll()
+                        .requestMatchers("/api/auth/me").authenticated()
                         // Lectura de productos abierta para carrusel y catálogo público
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Creación, edición y eliminación restringida a ROLE_ADMIN

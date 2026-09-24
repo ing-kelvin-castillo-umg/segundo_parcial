@@ -63,6 +63,10 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public long getExpirationSeconds() {
+        return jwtExpirationMs / 1000;
+    }
+
     public String getUsernameFromJwt(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -80,13 +84,13 @@ public class JwtTokenProvider {
                     .parseSignedClaims(authToken);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
-            log.error("Firma JWT inválida: {}", e.getMessage());
+            log.warn("Se rechazó un JWT con firma o formato inválido");
         } catch (ExpiredJwtException e) {
-            log.error("Token JWT expirado: {}", e.getMessage());
+            log.debug("Se rechazó un JWT expirado");
         } catch (UnsupportedJwtException e) {
-            log.error("Token JWT no soportado: {}", e.getMessage());
+            log.warn("Se rechazó un tipo de JWT no soportado");
         } catch (IllegalArgumentException e) {
-            log.error("La cadena de claims JWT está vacía: {}", e.getMessage());
+            log.warn("Se rechazó un JWT vacío");
         }
         return false;
     }
