@@ -17,14 +17,17 @@ import {
   RefreshCw,
   CheckCircle,
   AlertTriangle,
+  ChevronDown,
+  LogOut,
 } from "lucide-react";
 
 export default function ProductsPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Modal states
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
@@ -105,18 +108,18 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 space-y-8 max-w-7xl w-full mx-auto">
+    <div className="p-4 sm:p-8 lg:p-10 space-y-8 max-w-7xl w-full mx-auto">
       {/* Toast alert */}
       {toast && (
         <div
           className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-xl border text-sm font-medium animate-in slide-in-from-bottom-5 duration-300 ${
             toast.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              ? "bg-lime/30 border-lime text-forest"
               : "bg-rose-50 border-rose-200 text-rose-800"
           }`}
         >
           {toast.type === "success" ? (
-            <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <CheckCircle className="w-5 h-5 text-forest" />
           ) : (
             <AlertTriangle className="w-5 h-5 text-rose-600" />
           )}
@@ -127,14 +130,14 @@ export default function ProductsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center gap-2 text-plum text-xs font-semibold uppercase tracking-wider mb-1">
+            <Boxes className="w-4 h-4 text-plum" />
             <span>Módulo de Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-forest tracking-tight">
             Gestión de Productos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-forest/65 mt-1">
             Consulta, busca y gestiona el inventario de productos en tiempo real.
           </p>
         </div>
@@ -145,27 +148,35 @@ export default function ProductsPage() {
             onClick={loadProducts}
             disabled={loading}
             title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-lavender bg-white hover:bg-lavender/30 text-forest transition-colors shadow-sm disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-plum" : ""}`} />
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
+          <div className="relative">
+          <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-lavender shadow-sm text-xs font-semibold text-forest hover:bg-lavender/30 transition-colors">
             {isAdmin ? (
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-plum" />
             ) : (
-              <UserIcon className="w-4 h-4 text-emerald-600" />
+              <UserIcon className="w-4 h-4 text-forest" />
             )}
             <span>Rol:</span>
             <span
               className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                 isAdmin
-                  ? "bg-indigo-100 text-indigo-800"
-                  : "bg-emerald-100 text-emerald-800"
+                ? "bg-lavender text-plum"
+                : "bg-lime/60 text-forest"
               }`}
             >
               {isAdmin ? "ADMINISTRADOR" : "USUARIO"}
             </span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isProfileOpen ? "rotate-180" : ""}`} />
+          </button>
+          {isProfileOpen && <div className="absolute right-0 top-full mt-2 w-56 z-20 rounded-xl bg-white border border-lavender shadow-xl p-2">
+            <p className="px-3 pt-2 text-xs font-bold text-forest">{user?.fullName || user?.username}</p>
+            <p className="px-3 pb-2 text-[11px] text-forest/60">@{user?.username}</p>
+            <button onClick={() => logout()} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-plum hover:bg-lavender/50 transition-colors"><LogOut className="w-4 h-4" />Cerrar sesión</button>
+          </div>}
           </div>
         </div>
       </div>

@@ -22,12 +22,12 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
   if (!isOpen || !product) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-lavender">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-lavender bg-lavender/25">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-blue-100 text-blue-700">
+            <span className="p-1.5 rounded-lg bg-lavender text-plum">
               <Tag className="w-4 h-4" />
             </span>
             <h3 className="text-lg font-bold text-slate-900">Detalle del Producto</h3>
@@ -64,7 +64,7 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
           {/* Details */}
           <div className="space-y-4">
             <div>
-              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-plum uppercase tracking-wider">
                 {product.category}
               </span>
               <h4 className="text-2xl font-black text-slate-900 mt-1">{product.name}</h4>
@@ -78,11 +78,11 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100">
-                <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
+              <div className="p-3.5 rounded-xl bg-lavender/35 border border-lavender">
+                <span className="text-xs text-plum font-medium flex items-center gap-1">
                   <DollarSign className="w-3.5 h-3.5" /> Precio Unitario
                 </span>
-                <p className="text-lg font-bold text-blue-900 mt-0.5">{product.formattedPrice}</p>
+                <p className="text-lg font-bold text-plum mt-0.5">{product.formattedPrice}</p>
               </div>
 
               <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100">

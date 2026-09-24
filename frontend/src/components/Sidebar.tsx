@@ -26,10 +26,10 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col shrink-0 min-h-screen border-r border-slate-800">
+    <aside className="hidden lg:flex w-64 bg-forest text-lavender flex-col shrink-0 min-h-screen border-r border-forest">
       {/* Brand Header */}
-      <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+      <div className="p-6 border-b border-lavender/15 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-lime flex items-center justify-center text-forest shadow-lg shadow-black/20">
           <Package className="w-5 h-5" />
         </div>
         <div>
@@ -56,8 +56,8 @@ export const Sidebar: React.FC = () => {
               href={item.href}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  ? "bg-lime text-forest shadow-md shadow-black/20"
+                  : "text-lavender/80 hover:bg-lavender/10 hover:text-white"
               }`}
             >
               <Icon className="w-5 h-5 shrink-0" />
@@ -78,7 +78,7 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* User Profile Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/50">
+      <div className="p-4 border-t border-lavender/15 bg-plum/30">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-xs shrink-0 ${isAdmin ? "bg-indigo-600 ring-2 ring-indigo-400" : "bg-emerald-600 ring-2 ring-emerald-400"}`}>

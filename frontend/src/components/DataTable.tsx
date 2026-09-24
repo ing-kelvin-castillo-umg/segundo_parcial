@@ -49,9 +49,9 @@ export const DataTable: React.FC<DataTableProps> = ({
   }, [products, searchTerm]);
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="w-full bg-white rounded-2xl shadow-sm border border-lavender overflow-hidden">
       {/* Table Toolbar */}
-      <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+      <div className="p-5 border-b border-lavender flex flex-col sm:flex-row items-center justify-between gap-4 bg-lavender/25">
         {/* Search Bar */}
         <div className="relative w-full sm:w-96">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -60,7 +60,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre, categoría, precio, stock..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-lavender bg-white text-sm focus:outline-none focus:ring-2 focus:ring-plum focus:border-transparent transition-all"
           />
           {searchTerm && (
             <button
@@ -82,7 +82,7 @@ export const DataTable: React.FC<DataTableProps> = ({
           {isAdmin ? (
             <button
               onClick={onCreate}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all hover:shadow"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-plum hover:bg-forest text-white text-sm font-semibold shadow-sm transition-all hover:shadow"
             >
               <Plus className="w-4 h-4" />
               <span>Nuevo Producto</span>
@@ -98,7 +98,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-100/70 text-slate-700 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
+          <thead className="bg-plum text-lavender text-xs uppercase font-bold tracking-wider border-b border-plum">
             <tr>
               <th scope="col" className="px-6 py-4">Producto</th>
               <th scope="col" className="px-6 py-4">Categoría</th>
@@ -110,9 +110,9 @@ export const DataTable: React.FC<DataTableProps> = ({
           <tbody className="divide-y divide-slate-200">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
-                <tr
+            <tr
                   key={product.id}
-                  className="hover:bg-blue-50/40 transition-colors group"
+                  className="hover:bg-lavender/25 transition-colors group"
                 >
                   {/* Name & Thumbnail */}
                   <td className="px-6 py-4">
@@ -140,7 +140,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
                   {/* Category */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-lavender/35 text-plum border border-lavender">
                       <Tag className="w-3 h-3 text-slate-400" />
                       {product.category}
                     </span>
@@ -175,7 +175,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                       <button
                         onClick={() => onView(product)}
                         title="Ver producto en grande"
-                        className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-forest/70 hover:text-plum hover:bg-lavender/50 rounded-lg transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
