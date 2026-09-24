@@ -58,6 +58,9 @@ export default function ProductsPage() {
     loadProducts();
   }, [loadProducts]);
 
+  const availableProducts = products.filter((product) => product.inStock).length;
+  const totalStock = products.reduce((total, product) => total + product.stock, 0);
+
   // View Handler
   const handleView = (product: Product) => {
     setViewProduct(product);
@@ -128,14 +131,14 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+            <Boxes className="w-4 h-4 text-brand-600" />
             <span>Módulo de Inventario</span>
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
             Gestión de Productos
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Consulta, busca y gestiona el inventario de productos en tiempo real.
+            Bienvenido, {user?.fullName || user?.username}. Consulta y gestiona el inventario en tiempo real.
           </p>
         </div>
 
@@ -147,12 +150,12 @@ export default function ProductsPage() {
             title="Recargar listado"
             className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-brand-600" : ""}`} />
           </button>
 
           <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
             {isAdmin ? (
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-accent-600" />
             ) : (
               <UserIcon className="w-4 h-4 text-emerald-600" />
             )}
@@ -160,7 +163,7 @@ export default function ProductsPage() {
             <span
               className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                 isAdmin
-                  ? "bg-indigo-100 text-indigo-800"
+                  ? "bg-accent-100 text-accent-800"
                   : "bg-emerald-100 text-emerald-800"
               }`}
             >
@@ -169,6 +172,48 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      {/* Inventory summary */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Resumen de inventario">
+        <article className="rounded-2xl bg-white border border-brand-100 p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Productos</p>
+              <p className="mt-2 text-3xl font-black text-brand-900">{products.length}</p>
+              <p className="mt-1 text-xs text-slate-500">registrados en catálogo</p>
+            </div>
+            <div className="rounded-xl bg-brand-100 p-3 text-brand-700">
+              <Boxes className="w-5 h-5" />
+            </div>
+          </div>
+        </article>
+
+        <article className="rounded-2xl bg-white border border-emerald-100 p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Disponibles</p>
+              <p className="mt-2 text-3xl font-black text-emerald-700">{availableProducts}</p>
+              <p className="mt-1 text-xs text-slate-500">con existencia activa</p>
+            </div>
+            <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700">
+              <CheckCircle className="w-5 h-5" />
+            </div>
+          </div>
+        </article>
+
+        <article className="rounded-2xl bg-white border border-accent-100 p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Unidades</p>
+              <p className="mt-2 text-3xl font-black text-accent-800">{totalStock}</p>
+              <p className="mt-1 text-xs text-slate-500">en inventario total</p>
+            </div>
+            <div className="rounded-xl bg-accent-100 p-3 text-accent-700">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+          </div>
+        </article>
+      </section>
 
       {/* Main DataTable */}
       <DataTable
