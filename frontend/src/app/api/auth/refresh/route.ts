@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { proxyLogin } from "@/app/api/_lib/auth-proxy";
+import { proxyRefresh } from "@/app/api/_lib/auth-proxy";
 
 export async function POST(request: NextRequest) {
-  return proxyLogin(request);
+  return proxyRefresh(request);
 }

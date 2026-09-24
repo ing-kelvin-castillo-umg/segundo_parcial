@@ -1,6 +1,18 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
 export class ApiClient {
+  private static refreshPromise: Promise<string | null> | null = null;
+  private static sessionExpiredHandler: (() => void) | null = null;
+  private static sessionExpired = false;
+
+  static setSessionExpiredHandler(handler: (() => void) | null): void {
+    this.sessionExpiredHandler = handler;
+  }
+
+  static resetSessionExpiration(): void {
+    this.sessionExpired = false;
+  }
+
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("token");
@@ -8,7 +20,60 @@ export class ApiClient {
     return null;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  private static async readResponse<T>(response: Response): Promise<ApiResponseDto<T> | undefined> {
+    const responseText = await response.text();
+    if (!responseText) return undefined;
+
+    try {
+      return JSON.parse(responseText) as ApiResponseDto<T>;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private static async refreshAccessToken(): Promise<string | null> {
+    if (!this.refreshPromise) {
+      this.refreshPromise = (async () => {
+        try {
+          const response = await fetch("/api/auth/refresh", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+          });
+          const data = await this.readResponse<{ token: string }>(response);
+          const token = response.ok ? data?.data?.token : null;
+
+          if (token && typeof window !== "undefined") {
+            localStorage.setItem("token", token);
+          }
+          return token || null;
+        } catch {
+          return null;
+        } finally {
+          this.refreshPromise = null;
+        }
+      })();
+    }
+
+    return this.refreshPromise;
+  }
+
+  private static expireSession(): void {
+    if (this.sessionExpired) return;
+    this.sessionExpired = true;
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+    this.sessionExpiredHandler?.();
+  }
+
+  static async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    hasRetried = false,
+  ): Promise<ApiResponseDto<T>> {
     // The browser only calls the Next.js BFF on the current origin.
     const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const token = this.getToken();
@@ -29,15 +94,19 @@ export class ApiClient {
         headers,
       });
 
-      const responseText = await response.text();
-      let data: ApiResponseDto<T> | undefined;
+      const data = await this.readResponse<T>(response);
+      const isAuthenticationEndpoint = url.startsWith("/api/auth/login") || url.startsWith("/api/auth/refresh");
 
-      if (responseText) {
-        try {
-          data = JSON.parse(responseText) as ApiResponseDto<T>;
-        } catch {
-          // A proxied non-JSON response can still produce a useful HTTP error.
+      if (response.status === 401 && !hasRetried && !isAuthenticationEndpoint) {
+        const refreshedToken = await this.refreshAccessToken();
+        if (refreshedToken) {
+          return this.request<T>(endpoint, options, true);
         }
+        this.expireSession();
+      }
+
+      if (response.status === 401 && hasRetried && !isAuthenticationEndpoint) {
+        this.expireSession();
       }
 
       if (!response.ok) {

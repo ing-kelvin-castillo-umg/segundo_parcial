@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
+import { ApiClient } from "@/services/api.client";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -28,9 +29,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (session) {
       setUser(session.user);
       setToken(session.token);
+      ApiClient.resetSessionExpiration();
+      AuthService.getCurrentUser()
+        .then((currentUser) => {
+          setUser(currentUser);
+          setToken(localStorage.getItem("token"));
+        })
+        .catch(() => {
+          // ApiClient handles refresh and redirects only if it cannot renew the session.
+        });
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    ApiClient.setSessionExpiredHandler(() => {
+      AuthService.logout();
+      setUser(null);
+      setToken(null);
+      router.replace("/login");
+    });
+
+    return () => ApiClient.setSessionExpiredHandler(null);
+  }, [router]);
 
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });

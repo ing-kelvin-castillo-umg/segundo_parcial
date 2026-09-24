@@ -1,6 +1,7 @@
 package com.umg.examen.config;
 
 import com.umg.examen.dto.response.ApiResponse;
+import com.umg.examen.exception.InvalidRefreshTokenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +16,12 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ApiResponse<String>> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<String>> handleBadCredentials(BadCredentialsException ex) {

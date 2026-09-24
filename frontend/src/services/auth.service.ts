@@ -13,6 +13,7 @@ export class AuthService {
       localStorage.setItem("token", session.token);
       localStorage.setItem("user", JSON.stringify(session.user));
     }
+    ApiClient.resetSessionExpiration();
 
     return session;
   }

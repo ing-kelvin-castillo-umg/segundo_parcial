@@ -2,6 +2,7 @@ package com.umg.examen.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.Instant;
 import java.util.List;
 
 @Schema(description = "Respuesta de autenticación con Token JWT")
@@ -24,6 +25,12 @@ public class AuthResponse {
 
     @Schema(description = "Lista de roles asignados", example = "[\"ROLE_ADMIN\"]")
     private List<String> roles;
+
+    @Schema(description = "Refresh token para renovación de sesión. El BFF lo convierte en cookie HttpOnly.")
+    private String refreshToken;
+
+    @Schema(description = "Fecha de expiración del refresh token")
+    private Instant refreshTokenExpiresAt;
 
     public AuthResponse() {}
 
@@ -82,5 +89,21 @@ public class AuthResponse {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public Instant getRefreshTokenExpiresAt() {
+        return refreshTokenExpiresAt;
+    }
+
+    public void setRefreshTokenExpiresAt(Instant refreshTokenExpiresAt) {
+        this.refreshTokenExpiresAt = refreshTokenExpiresAt;
     }
 }
