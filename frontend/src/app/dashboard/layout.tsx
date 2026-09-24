@@ -51,8 +51,8 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
+      <div className="min-h-screen bg-surface-950 flex flex-col items-center justify-center text-surface-400">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500 mb-3" />
         <p className="text-sm">Verificando sesión...</p>
       </div>
     );
@@ -63,14 +63,16 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex bg-surface-50 text-surface-900">
       {/* Left Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Indicador permanente del tiempo restante de sesión */}
-        <div className="sticky top-0 z-30 flex justify-end px-6 lg:px-10 pt-4">
+        <div className="sticky top-0 z-30 flex items-center justify-end gap-3 px-5 lg:px-10 py-4 bg-surface-50/80 backdrop-blur-sm">
+          {/* Hueco reservado al botón de menú en pantallas pequeñas */}
+          <span className="lg:hidden w-10 mr-auto" aria-hidden="true" />
           <SessionTimer remainingMs={remainingMs} isWarning={isWarning} />
         </div>
 

@@ -2,39 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Tema visual del sistema: teal profundo (primario), ámbar (acento) y grafito
+  cálido (superficies). Las variables permiten reutilizar los tonos fuera de las
+  utilidades de Tailwind, por ejemplo en gradientes y barras de desplazamiento.
+*/
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
+  --color-primary: 18, 184, 141;
+  --color-primary-dark: 4, 118, 94;
+  --color-accent: 245, 158, 11;
+
+  --foreground-rgb: 40, 49, 47;
+  --background-start-rgb: 247, 248, 247;
   --background-end-rgb: 255, 255, 255;
+
+  --surface-deep: 20, 26, 25;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(var(--color-primary), 0.08), transparent 60%),
+    linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
+      rgb(var(--background-start-rgb));
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Custom scrollbar */
+/* Barra de desplazamiento alineada con la paleta de superficies. */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #eef1f0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: #bcc7c4;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #738884;
+}
+
+@layer components {
+  /* Panel translúcido usado en las vistas oscuras (landing e inicio de sesión). */
+  .surface-glass {
+    @apply bg-surface-900/70 backdrop-blur-xl border border-white/5;
+  }
+
+  /* Texto con degradado de marca, para titulares y precios destacados. */
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-primary-300 via-primary-400 to-accent-300 bg-clip-text text-transparent;
+  }
+}
+
+/* Respeta la preferencia del sistema de reducir animaciones. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

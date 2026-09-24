@@ -21,15 +21,15 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({ remainingMs, isWarni
     <div
       className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold tabular-nums transition-colors ${
         isWarning
-          ? "bg-rose-50 border-rose-200 text-rose-700"
-          : "bg-white border-slate-200 text-slate-600"
+          ? "bg-danger-50 border-danger-200 text-danger-700"
+          : "bg-white border-surface-200 text-surface-600"
       }`}
       title="Tiempo restante antes del cierre automático por inactividad"
     >
       {isWarning ? (
-        <ShieldAlert className="w-4 h-4 text-rose-600" />
+        <ShieldAlert className="w-4 h-4 text-danger-600" />
       ) : (
-        <Clock className="w-4 h-4 text-slate-400" />
+        <Clock className="w-4 h-4 text-surface-400" />
       )}
       <span className="hidden sm:inline text-[11px] uppercase tracking-wide font-medium opacity-70">
         Sesión
