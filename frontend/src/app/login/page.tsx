@@ -62,8 +62,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 bg-slate-950 text-slate-100 relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/4 -left-32 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-32 w-80 h-80 bg-electric-600/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-turquoise-500/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* Back to Home Link */}
       <div className="w-full max-w-md mb-6">

@@ -34,12 +34,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-navy-50 text-navy-900">
       {/* Left Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0">
         {children}
       </div>
     </div>

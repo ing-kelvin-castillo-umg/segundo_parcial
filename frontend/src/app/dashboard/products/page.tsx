@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Product } from "@/entities/product.entity";
 import { ProductService } from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,9 @@ import {
 } from "@/components/ProductModals";
 import {
   Boxes,
+  Layers,
+  Tags,
+  Wallet,
   ShieldCheck,
   User as UserIcon,
   RefreshCw,
@@ -36,6 +39,18 @@ export default function ProductsPage() {
 
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Metricas del inventario calculadas con los datos reales cargados
+  const metrics = useMemo(() => {
+    const units = products.reduce((acc, p) => acc + (p.stock || 0), 0);
+    const value = products.reduce((acc, p) => acc + (p.price || 0) * (p.stock || 0), 0);
+    return {
+      total: products.length,
+      units,
+      categories: new Set(products.map((p) => p.category)).size,
+      value: `Q ${value.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    };
+  }, [products]);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });
@@ -105,7 +120,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 space-y-8 max-w-7xl w-full mx-auto">
+    <div className="p-4 sm:p-8 lg:p-10 space-y-6 sm:space-y-8 max-w-7xl w-full mx-auto">
       {/* Toast alert */}
       {toast && (
         <div
@@ -127,11 +142,11 @@ export default function ProductsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center gap-2 text-turquoise-700 text-xs font-bold uppercase tracking-wider mb-1">
+            <Boxes className="w-4 h-4 text-turquoise-600" />
             <span>Módulo de Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-navy-900 tracking-tight">
             Gestión de Productos
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -145,7 +160,7 @@ export default function ProductsPage() {
             onClick={loadProducts}
             disabled={loading}
             title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-navy-300 bg-white hover:bg-electric-50 hover:text-electric-700 text-navy-600 transition-colors shadow-sm disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
           </button>
@@ -168,6 +183,29 @@ export default function ProductsPage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Tarjetas de metricas */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          { label: "Productos", value: metrics.total, icon: Boxes, tone: "from-electric-600 to-electric-500" },
+          { label: "Unidades en inventario", value: metrics.units, icon: Layers, tone: "from-navy-800 to-navy-600" },
+          { label: "Categorías", value: metrics.categories, icon: Tags, tone: "from-turquoise-600 to-turquoise-400" },
+          { label: "Valor del inventario", value: metrics.value, icon: Wallet, tone: "from-indigo-600 to-electric-500" },
+        ].map((card) => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="rounded-2xl bg-white border border-navy-200 shadow-card p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+              <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${card.tone} text-white flex items-center justify-center shrink-0 shadow-sm`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-lg sm:text-2xl font-black text-navy-900 leading-tight truncate tabular-nums">{card.value}</p>
+                <p className="text-[11px] sm:text-xs font-medium text-navy-500 leading-tight">{card.label}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Main DataTable */}

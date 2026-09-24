@@ -9,39 +9,40 @@ export const Navbar: React.FC = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-navy-950/85 backdrop-blur-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:bg-blue-700 transition-colors">
+        <Link href="/" className="flex items-center gap-3 group min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-electric-500 to-turquoise-400 flex items-center justify-center text-white shadow-glow shrink-0 group-hover:scale-105 transition-transform">
             <Package className="w-5 h-5" />
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-lg text-slate-900 leading-tight">Portal UMG</span>
-            <span className="text-xs text-slate-500">Segundo Parcial - Catálogo</span>
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-lg text-white leading-tight tracking-tight">Portal UMG</span>
+            <span className="hidden sm:block text-xs text-navy-300">Segundo Parcial · Catálogo</span>
           </div>
         </Link>
 
         {/* Navigation / Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
+            <>
               <Link
                 href="/dashboard/products"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-semibold text-white bg-electric-500 hover:bg-electric-400 rounded-xl shadow-sm transition-colors"
               >
                 <LayoutDashboard className="w-4 h-4" />
-                <span>Panel de Productos</span>
+                <span className="hidden sm:inline">Panel de Productos</span>
+                <span className="sm:hidden">Panel</span>
               </Link>
 
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-medium text-slate-700">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-medium text-navy-100">
                 {isAdmin ? (
-                  <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                  <ShieldCheck className="w-4 h-4 text-electric-300" />
                 ) : (
-                  <UserIcon className="w-4 h-4 text-emerald-600" />
+                  <UserIcon className="w-4 h-4 text-turquoise-300" />
                 )}
                 <span>{user?.username}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${isAdmin ? "bg-indigo-100 text-indigo-700" : "bg-emerald-100 text-emerald-700"}`}>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${isAdmin ? "bg-electric-500/25 text-electric-200" : "bg-turquoise-400/20 text-turquoise-200"}`}>
                   {isAdmin ? "ADMIN" : "USER"}
                 </span>
               </div>
@@ -49,15 +50,16 @@ export const Navbar: React.FC = () => {
               <button
                 onClick={logout}
                 title="Cerrar sesión"
-                className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                aria-label="Cerrar sesión"
+                className="p-2.5 text-navy-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
               >
                 <LogOut className="w-4 h-4" />
               </button>
-            </div>
+            </>
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-600/20 transition-all hover:shadow-md hover:shadow-blue-600/30"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-electric-500 hover:bg-electric-400 rounded-xl shadow-glow transition-all"
             >
               <LogIn className="w-4 h-4" />
               <span>Iniciar Sesión</span>
