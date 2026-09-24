@@ -8,12 +8,15 @@ export class AuthService {
     const dto = AuthMapper.toLoginDto(credentials);
     const response = await ApiClient.post<AuthResponseDto>("/api/auth/login", dto);
     const session = AuthMapper.toSession(response.data);
+    ApiClient.persistAuthResponse(response.data);
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("token", session.token);
-      localStorage.setItem("user", JSON.stringify(session.user));
-    }
+    return session;
+  }
 
+  static async refreshSession(): Promise<AuthSession> {
+    const response = await ApiClient.refreshSession();
+    const session = AuthMapper.toSession(response);
+    ApiClient.persistAuthResponse(response);
     return session;
   }
 
@@ -23,24 +26,25 @@ export class AuthService {
   }
 
   static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    }
+    ApiClient.clearStoredSession();
   }
 
   static getStoredSession(): AuthSession | null {
     if (typeof window === "undefined") return null;
 
     const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+    const expiresAt = Number(localStorage.getItem("accessTokenExpiresAt"));
     const userStr = localStorage.getItem("user");
 
-    if (!token || !userStr) return null;
+    if (!token || !refreshToken || !expiresAt || !userStr) return null;
 
     try {
       const user = JSON.parse(userStr) as User;
       return {
         token,
+        refreshToken,
+        accessTokenExpiresAt: expiresAt,
         user,
         isAuthenticated: true,
         isAdmin: user.roles?.includes("ROLE_ADMIN") || false,

@@ -31,7 +31,7 @@ public class UserMapper {
         return response;
     }
 
-    public AuthResponse toAuthResponse(User user, String token) {
+    public AuthResponse toAuthResponse(User user, String token, String refreshToken, long accessTokenExpiresAt) {
         if (user == null) {
             return null;
         }
@@ -41,6 +41,8 @@ public class UserMapper {
 
         AuthResponse response = new AuthResponse();
         response.setToken(token);
+        response.setRefreshToken(refreshToken);
+        response.setAccessTokenExpiresAt(accessTokenExpiresAt);
         response.setType("Bearer");
         response.setUsername(user.getUsername());
         response.setFullName(user.getFullName());

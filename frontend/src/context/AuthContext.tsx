@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [accessTokenExpiresAt, setAccessTokenExpiresAt] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -28,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (session) {
       setUser(session.user);
       setToken(session.token);
+      setAccessTokenExpiresAt(session.accessTokenExpiresAt);
     }
     setLoading(false);
   }, []);
@@ -36,12 +38,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const session = await AuthService.login({ username, password });
     setUser(session.user);
     setToken(session.token);
+    setAccessTokenExpiresAt(session.accessTokenExpiresAt);
   };
+
+  useEffect(() => {
+    if (!token || !accessTokenExpiresAt) return;
+
+    const renewalDelay = Math.max(accessTokenExpiresAt - Date.now() - 60_000, 1_000);
+    const timeout = window.setTimeout(async () => {
+      try {
+        const session = await AuthService.refreshSession();
+        setUser(session.user);
+        setToken(session.token);
+        setAccessTokenExpiresAt(session.accessTokenExpiresAt);
+      } catch {
+        AuthService.logout();
+        setUser(null);
+        setToken(null);
+        setAccessTokenExpiresAt(null);
+        router.push("/login?reason=session-expired");
+      }
+    }, renewalDelay);
+
+    return () => window.clearTimeout(timeout);
+  }, [token, accessTokenExpiresAt, router]);
 
   const logout = () => {
     AuthService.logout();
     setUser(null);
     setToken(null);
+    setAccessTokenExpiresAt(null);
     router.push("/");
   };
 

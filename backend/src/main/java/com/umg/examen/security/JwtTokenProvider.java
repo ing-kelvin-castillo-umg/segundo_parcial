@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -44,6 +45,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())
                 .claim("roles", roles)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -57,6 +59,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(username)
                 .claim("roles", roles)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -89,5 +92,9 @@ public class JwtTokenProvider {
             log.error("La cadena de claims JWT está vacía: {}", e.getMessage());
         }
         return false;
+    }
+
+    public long getAccessTokenExpirationMs() {
+        return jwtExpirationMs;
     }
 }
