@@ -1,5 +1,7 @@
 server:
   port: ${PORT:8080}
+  # Respeta X-Forwarded-* enviados por el BFF de Next.js (URLs generadas con el host público)
+  forward-headers-strategy: framework
 
 spring:
   application:

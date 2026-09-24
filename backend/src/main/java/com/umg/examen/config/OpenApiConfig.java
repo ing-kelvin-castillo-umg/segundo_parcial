@@ -7,8 +7,11 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
@@ -18,6 +21,9 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
+                // URL relativa: Swagger usa el mismo origen desde el que se abrió (BFF en :3000),
+                // en lugar de la dirección interna que springdoc deduce del encabezado Host.
+                .servers(List.of(new Server().url("/").description("Mismo origen (BFF)")))
                 .info(new Info()
                         .title("API Examen Segundo Parcial - UMG")
                         .description("Documentación interactiva de la API REST para el sistema de gestión de productos con autenticación JWT y roles.")
