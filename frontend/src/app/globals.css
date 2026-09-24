@@ -3,9 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
+  --foreground-rgb: 19, 78, 74;
+  --background-start-rgb: 240, 253, 250;
   --background-end-rgb: 255, 255, 255;
+}
+
+::selection {
+  background: #99f6e4;
+  color: #134e4a;
 }
 
 body {
