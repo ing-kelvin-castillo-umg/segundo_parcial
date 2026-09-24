@@ -36,8 +36,10 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
       JWT_EXPIRATION_MS: 86400000
+    # Solo accesible desde esta máquina (Swagger / pruebas con curl). El navegador de la app
+    # nunca llama aquí: el frontend (BFF) contacta al backend por la red interna de Docker.
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8081:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,12 +50,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080
     container_name: examen_frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      # Variable solo de servidor (sin NEXT_PUBLIC_): la usa el BFF, nunca llega al navegador.
+      BACKEND_URL: http://backend:8080
     ports:
       - "3000:3000"
     depends_on:

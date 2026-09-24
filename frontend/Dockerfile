@@ -15,9 +15,8 @@ COPY . .
 # Deshabilitar telemetría de Next.js en build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# URL pública de la API durante build
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+# La URL del backend NO se inyecta en el build: el BFF la lee en tiempo de ejecución
+# desde BACKEND_URL (variable solo de servidor definida en docker-compose.yml).
 
 RUN npm run build
 

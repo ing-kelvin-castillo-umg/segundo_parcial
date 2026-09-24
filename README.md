@@ -55,8 +55,10 @@ docker compose up --build
 
 ### Servicios Levantados:
 1. **Frontend**: [http://localhost:3000](http://localhost:3000)
-2. **Backend API**: [http://localhost:8080](http://localhost:8080)
-3. **Swagger UI (Documentación interactiva)**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+2. **Backend API** (solo desde la máquina local): [http://127.0.0.1:8081](http://127.0.0.1:8081)
+3. **Swagger UI (Documentación interactiva)**: [http://127.0.0.1:8081/swagger-ui.html](http://127.0.0.1:8081/swagger-ui.html)
+
+> **BFF / Proxy inverso:** el navegador consume la API únicamente a través de Next.js en `http://localhost:3000/api/...`. Los Route Handlers (`frontend/src/app/api/[...path]/route.ts`) reenvían cada petición al backend por la red interna de Docker (`BACKEND_URL=http://backend:8080`), por lo que la URL real del backend nunca llega al cliente. El puerto `8081` se publica solo en `127.0.0.1` para Swagger y pruebas locales.
 4. **PostgreSQL**: `localhost:5432` (Base de datos: `examen_db`)
 
 Para detener los servicios:
