@@ -24,8 +24,8 @@ export function DashboardShell({ children, inactivityTimeoutMs }: DashboardShell
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
+      <div className="min-h-screen bg-dark-background flex flex-col items-center justify-center text-dark-muted/70">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-medium mb-3" />
         <p className="text-sm">Verificando sesión...</p>
       </div>
     );
@@ -36,9 +36,9 @@ export function DashboardShell({ children, inactivityTimeoutMs }: DashboardShell
   return (
     <>
       <InactivityGuard timeoutMs={inactivityTimeoutMs} />
-      <div className="min-h-screen flex bg-slate-50 text-slate-900">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-canvas text-ink">
         <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">{children}</div>
+        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">{children}</main>
       </div>
     </>
   );

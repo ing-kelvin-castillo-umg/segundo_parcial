@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Product } from "@/entities/product.entity";
-import { X, Tag, DollarSign, Layers, Calendar, Image as ImageIcon, AlertTriangle, Loader2 } from "lucide-react";
+import { X, Tag, DollarSign, Layers, Calendar, AlertTriangle, Loader2 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
 /*                                VIEW MODAL                                  */
@@ -22,19 +22,20 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
   if (!isOpen || !product) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-background/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="view-product-title" className="relative w-full max-w-2xl bg-surface rounded-2xl shadow-2xl overflow-hidden border border-outline">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline bg-primary-light/35">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-blue-100 text-blue-700">
+            <span className="p-1.5 rounded-lg bg-primary-light text-primary-dark">
               <Tag className="w-4 h-4" />
             </span>
-            <h3 className="text-lg font-bold text-slate-900">Detalle del Producto</h3>
+            <h3 id="view-product-title" className="text-lg font-bold text-ink">Detalle del Producto</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label="Cerrar detalle del producto"
+            className="icon-button text-muted hover:text-primary-dark hover:bg-primary-light/60"
           >
             <X className="w-5 h-5" />
           </button>
@@ -43,7 +44,7 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
         {/* Content */}
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           {/* Large Image Preview */}
-          <div className="w-full h-72 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group shadow-inner">
+          <div className="w-full h-72 rounded-xl overflow-hidden bg-surface-secondary border border-outline relative group shadow-inner">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.imageUrl}
@@ -55,7 +56,7 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
               }}
             />
             <div className="absolute top-3 right-3">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-md ${product.inStock ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-md ${product.inStock ? "bg-success text-white" : "bg-danger text-white"}`}>
                 {product.inStock ? `${product.stock} en inventario` : "Agotado"}
               </span>
             </div>
@@ -64,49 +65,49 @@ export const ViewProductModal: React.FC<ViewProductModalProps> = ({
           {/* Details */}
           <div className="space-y-4">
             <div>
-              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider">
                 {product.category}
               </span>
-              <h4 className="text-2xl font-black text-slate-900 mt-1">{product.name}</h4>
+              <h4 className="text-2xl font-black text-ink mt-1">{product.name}</h4>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-              <p className="text-xs font-medium text-slate-500 mb-1">Descripción</p>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+            <div className="p-4 rounded-xl bg-surface-secondary border border-outline">
+              <p className="text-xs font-medium text-muted mb-1">Descripción</p>
+              <p className="text-sm text-ink leading-relaxed whitespace-pre-line">
                 {product.description}
               </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100">
-                <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
+              <div className="p-3.5 rounded-xl bg-primary-light/55 border border-primary/20">
+                <span className="text-xs text-primary font-medium flex items-center gap-1">
                   <DollarSign className="w-3.5 h-3.5" /> Precio Unitario
                 </span>
-                <p className="text-lg font-bold text-blue-900 mt-0.5">{product.formattedPrice}</p>
+                <p className="text-lg font-bold text-primary-dark mt-0.5">{product.formattedPrice}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100">
-                <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+              <div className="p-3.5 rounded-xl bg-success/10 border border-success/20">
+                <span className="text-xs text-success font-medium flex items-center gap-1">
                   <Layers className="w-3.5 h-3.5" /> Stock Disponible
                 </span>
-                <p className="text-lg font-bold text-emerald-900 mt-0.5">{product.stock} unidades</p>
+                <p className="text-lg font-bold text-ink mt-0.5">{product.stock} unidades</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-100/70 border border-slate-200 col-span-2 sm:col-span-1">
-                <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+              <div className="p-3.5 rounded-xl bg-surface-secondary border border-outline col-span-2 sm:col-span-1">
+                <span className="text-xs text-muted font-medium flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" /> ID Registro
                 </span>
-                <p className="text-lg font-bold text-slate-800 mt-0.5">#{product.id}</p>
+                <p className="text-lg font-bold text-ink mt-0.5">#{product.id}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+        <div className="px-6 py-4 border-t border-outline bg-surface-secondary/60 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+            className="btn-secondary"
           >
             Cerrar
           </button>
@@ -203,16 +204,17 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-background/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="product-form-title" className="relative w-full max-w-xl bg-surface rounded-2xl shadow-2xl overflow-hidden border border-outline">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="text-lg font-bold text-slate-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline bg-primary-light/35">
+          <h3 id="product-form-title" className="text-lg font-bold text-ink">
             {mode === "create" ? "Crear Nuevo Producto" : "Editar Producto"}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label="Cerrar formulario de producto"
+            className="icon-button text-muted hover:text-primary-dark hover:bg-primary-light/60"
           >
             <X className="w-5 h-5" />
           </button>
@@ -221,65 +223,69 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+            <div className="p-3 bg-danger/10 border border-danger/25 rounded-xl text-xs text-danger flex items-center gap-2" role="alert">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+            <label htmlFor="product-name" className="block text-xs font-semibold text-ink uppercase mb-1">
               Nombre del Producto *
             </label>
             <input
               type="text"
+              id="product-name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej. MacBook Pro 16 M3"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="field-control"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              <label htmlFor="product-price" className="block text-xs font-semibold text-ink uppercase mb-1">
                 Precio (GTQ) *
               </label>
               <input
                 type="number"
+                id="product-price"
                 step="0.01"
                 required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="field-control"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              <label htmlFor="product-stock" className="block text-xs font-semibold text-ink uppercase mb-1">
                 Stock (Unidades) *
               </label>
               <input
                 type="number"
+                id="product-stock"
                 required
                 value={stock}
                 onChange={(e) => setStock(e.target.value)}
                 placeholder="0"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="field-control"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+            <label htmlFor="product-category" className="block text-xs font-semibold text-ink uppercase mb-1">
               Categoría
             </label>
             <select
               value={category}
+              id="product-category"
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+              className="field-control"
             >
               <option value="Computación">Computación</option>
               <option value="Monitores">Monitores</option>
@@ -292,47 +298,49 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+            <label htmlFor="product-image" className="block text-xs font-semibold text-ink uppercase mb-1">
               URL de Imagen (Dummy o Web)
             </label>
             <input
               type="url"
+              id="product-image"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="https://images.unsplash.com/..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="field-control"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-muted mt-1">
               Puedes pegar cualquier URL de imagen (Unsplash, imgur, etc.)
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+            <label htmlFor="product-description" className="block text-xs font-semibold text-ink uppercase mb-1">
               Descripción
             </label>
             <textarea
               rows={3}
+              id="product-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Características destacadas del producto..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+              className="field-control resize-none"
             />
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-outline flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+              className="btn-secondary"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+              className="btn-primary"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{mode === "create" ? "Guardar Producto" : "Actualizar"}</span>
@@ -376,15 +384,15 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 border border-slate-200">
-        <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-background/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="delete-product-title" className="relative w-full max-w-md bg-surface rounded-2xl shadow-2xl p-6 border border-outline">
+        <div className="w-12 h-12 rounded-2xl bg-danger/10 text-danger flex items-center justify-center mb-4">
           <AlertTriangle className="w-6 h-6" />
         </div>
 
-        <h3 className="text-lg font-bold text-slate-900 mb-2">¿Eliminar este producto?</h3>
-        <p className="text-sm text-slate-600 leading-relaxed mb-6">
-          Estás a punto de eliminar permanentemente <span className="font-semibold text-slate-900">&quot;{productName}&quot;</span>. Esta acción no se puede deshacer.
+        <h3 id="delete-product-title" className="text-lg font-bold text-ink mb-2">¿Eliminar este producto?</h3>
+        <p className="text-sm text-muted leading-relaxed mb-6">
+          Estás a punto de eliminar permanentemente <span className="font-semibold text-ink">&quot;{productName}&quot;</span>. Esta acción no se puede deshacer.
         </p>
 
         <div className="flex items-center justify-end gap-3">
@@ -392,7 +400,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+            className="btn-secondary"
           >
             Cancelar
           </button>
@@ -400,7 +408,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             type="button"
             onClick={handleConfirm}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+            className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-danger hover:bg-danger/90 rounded-xl transition-colors disabled:opacity-50 shadow-sm"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             <span>Eliminar Definitivamente</span>
