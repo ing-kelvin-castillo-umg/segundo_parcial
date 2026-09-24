@@ -55,9 +55,9 @@ docker compose up --build
 
 ### Servicios Levantados:
 1. **Frontend**: [http://localhost:3000](http://localhost:3000)
-2. **Backend API**: [http://localhost:8080](http://localhost:8080)
-3. **Swagger UI (Documentación interactiva)**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-4. **PostgreSQL**: `localhost:5432` (Base de datos: `examen_db`)
+2. **PostgreSQL**: `localhost:5432` (Base de datos: `examen_db`)
+
+El backend no publica el puerto `8080` hacia el host. Las peticiones del navegador usan rutas `/api/...` del frontend y Next.js las reenvía internamente al servicio `backend` dentro de la red de Docker.
 
 Para detener los servicios:
 ```bash

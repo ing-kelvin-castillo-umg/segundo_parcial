@@ -15,10 +15,6 @@ COPY . .
 # Deshabilitar telemetría de Next.js en build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# URL pública de la API durante build
-ARG NEXT_PUBLIC_API_URL=http://localhost:8080
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
 RUN npm run build
 
 # Stage 3: Runner
@@ -29,6 +25,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV BACKEND_API_URL=http://backend:8080
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
