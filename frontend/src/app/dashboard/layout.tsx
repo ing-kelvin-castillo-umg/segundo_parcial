@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import { SessionTimeout } from "@/components/SessionTimeout";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -35,6 +36,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
+      <SessionTimeout />
       {/* Left Sidebar */}
       <Sidebar />
 

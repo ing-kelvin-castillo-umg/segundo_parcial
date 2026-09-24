@@ -23,12 +23,30 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+  static async logout(): Promise<void> {
+    if (typeof window === "undefined") return;
+
+    const refreshToken = localStorage.getItem("refreshToken");
+    try {
+      if (refreshToken) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } catch {
+      // La limpieza local y la redirección no dependen de que el servidor esté disponible.
+    } finally {
+      this.clearStoredSession();
     }
+  }
+
+  static clearStoredSession(): void {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   }
 
   static getStoredSession(): AuthSession | null {

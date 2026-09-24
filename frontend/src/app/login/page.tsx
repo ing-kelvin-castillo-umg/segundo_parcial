@@ -26,8 +26,12 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("reason") === "session-expired") {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    if (reason === "session-expired") {
       setSessionMessage("Tu sesión venció. Ingresa nuevamente para continuar.");
+    }
+    if (reason === "inactive") {
+      setSessionMessage("Sesión cerrada por inactividad.");
     }
   }, []);
 
