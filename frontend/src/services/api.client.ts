@@ -1,6 +1,6 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_BASE_URL = ""; // Empty string forces browser to use relative paths, triggering Next.js middleware (BFF)
 
 export class ApiClient {
   private static getToken(): string | null {
