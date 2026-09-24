@@ -1,6 +1,7 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.entity.User;
@@ -42,12 +43,32 @@ public class AuthServiceImpl implements AuthService {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = tokenProvider.generateToken(authentication);
-
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + request.getUsername()));
 
-        return userMapper.toAuthResponse(user, token);
+        return createTokenResponse(user, tokenProvider.generateToken(authentication));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResponse refresh(RefreshTokenRequest request) {
+        if (!tokenProvider.isRefreshToken(request.getRefreshToken())) {
+            throw new IllegalArgumentException("Refresh token inválido o expirado");
+        }
+
+        String username = tokenProvider.getUsernameFromJwt(request.getRefreshToken());
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+
+        return createTokenResponse(user, tokenProvider.generateTokenFromUsername(username, user.getRoles().stream()
+                .map(role -> role.getName())
+                .toList()));
+    }
+
+    private AuthResponse createTokenResponse(User user, String accessToken) {
+        var roles = user.getRoles().stream().map(role -> role.getName()).toList();
+        return userMapper.toAuthResponse(user, accessToken,
+                tokenProvider.generateRefreshToken(user.getUsername(), roles));
     }
 
     @Override

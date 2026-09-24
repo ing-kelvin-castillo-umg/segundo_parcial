@@ -5,6 +5,7 @@ import { ApiResponseDto } from "@/dtos/auth.dto";
 const API_BASE_URL = "";
 
 export class ApiClient {
+  private static refreshPromise: Promise<boolean> | null = null;
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("token");
@@ -27,10 +28,15 @@ export class ApiClient {
     }
 
     try {
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         ...options,
         headers,
       });
+
+      if (response.status === 401 && endpoint !== "/api/auth/refresh" && await this.refreshAccessToken()) {
+        headers.Authorization = `Bearer ${this.getToken()}`;
+        response = await fetch(url, { ...options, headers });
+      }
 
       const data = await response.json();
 
@@ -43,6 +49,41 @@ export class ApiClient {
     } catch (error: any) {
       console.error(`[API ERROR] ${options.method || "GET"} ${url}:`, error.message);
       throw error;
+    }
+  }
+
+  private static async refreshAccessToken(): Promise<boolean> {
+    if (typeof window === "undefined") return false;
+    if (this.refreshPromise) return this.refreshPromise;
+
+    this.refreshPromise = (async () => {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) return false;
+
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.data?.token || !payload?.data?.refreshToken) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.assign("/login");
+        return false;
+      }
+
+      localStorage.setItem("token", payload.data.token);
+      localStorage.setItem("refreshToken", payload.data.refreshToken);
+      return true;
+    })();
+
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
     }
   }
 
