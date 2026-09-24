@@ -5,6 +5,8 @@ export interface LoginRequestDto {
 
 export interface AuthResponseDto {
   token: string;
+  refreshToken: string;
+  expiresIn: number;
   type: string;
   username: string;
   fullName: string;

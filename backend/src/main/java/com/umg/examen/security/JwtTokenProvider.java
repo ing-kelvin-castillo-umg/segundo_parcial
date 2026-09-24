@@ -27,6 +27,10 @@ public class JwtTokenProvider {
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
+    public long getJwtExpirationMs() {
+        return jwtExpirationMs;
+    }
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);

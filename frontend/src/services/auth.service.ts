@@ -11,6 +11,7 @@ export class AuthService {
 
     if (typeof window !== "undefined") {
       localStorage.setItem("token", session.token);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(session.user));
     }
 
@@ -25,6 +26,7 @@ export class AuthService {
   static logout(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
     }
   }
