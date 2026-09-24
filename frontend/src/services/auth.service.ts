@@ -25,6 +25,24 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
+  static async notifyLogout(): Promise<void> {
+    if (typeof window === "undefined") return;
+
+    const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!token && !refreshToken) return;
+
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => undefined);
+  }
+
   static logout(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");

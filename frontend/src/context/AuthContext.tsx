@@ -5,6 +5,9 @@ import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
 
+const INACTIVITY_TIMEOUT_MS = 3000;
+const INACTIVITY_MESSAGE = "Sesión cerrada por inactividad";
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -32,6 +35,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (!user || !token) return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const logoutByInactivity = async () => {
+      await AuthService.notifyLogout();
+      AuthService.logout();
+      setUser(null);
+      setToken(null);
+      router.push(`/login?message=${encodeURIComponent(INACTIVITY_MESSAGE)}`);
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(logoutByInactivity, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [router, token, user]);
+
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
     setUser(session.user);
@@ -39,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    AuthService.notifyLogout();
     AuthService.logout();
     setUser(null);
     setToken(null);

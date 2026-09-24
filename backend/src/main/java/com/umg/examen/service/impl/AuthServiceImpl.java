@@ -9,6 +9,7 @@ import com.umg.examen.entity.User;
 import com.umg.examen.mapper.UserMapper;
 import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.JwtTokenProvider;
+import com.umg.examen.security.TokenBlacklistService;
 import com.umg.examen.service.AuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,15 +26,18 @@ public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtTokenProvider tokenProvider,
+                           TokenBlacklistService tokenBlacklistService,
                            UserRepository userRepository,
                            UserMapper userMapper) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
@@ -62,10 +66,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void logout(String accessToken, String refreshToken) {
+        revokeIfValid(accessToken, true);
+        revokeIfValid(refreshToken, false);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public AuthResponse refresh(RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
-        if (!tokenProvider.validateToken(refreshToken) || !tokenProvider.isRefreshToken(refreshToken)) {
+        if (!tokenProvider.validateToken(refreshToken)
+                || !tokenProvider.isRefreshToken(refreshToken)
+                || tokenBlacklistService.isRevoked(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token invalido o expirado");
         }
 
@@ -97,5 +109,16 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
         return userMapper.toResponse(user);
+    }
+
+    private void revokeIfValid(String token, boolean accessToken) {
+        if (token == null || !tokenProvider.validateToken(token)) {
+            return;
+        }
+
+        boolean expectedType = accessToken ? tokenProvider.isAccessToken(token) : tokenProvider.isRefreshToken(token);
+        if (expectedType) {
+            tokenBlacklistService.revoke(token, tokenProvider.getExpirationFromJwt(token));
+        }
     }
 }
