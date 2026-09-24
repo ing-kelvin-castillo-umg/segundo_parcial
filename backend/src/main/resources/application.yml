@@ -29,6 +29,8 @@ app:
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:5000}
     # Refresh token opaco persistido en BD, con rotación en cada uso (24 h por defecto)
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}
+    # Cada cuánto se eliminan la lista negra de jti y los refresh tokens ya expirados (5 min)
+    cleanup-interval-ms: ${JWT_CLEANUP_INTERVAL_MS:300000}
 
 springdoc:
   api-docs:

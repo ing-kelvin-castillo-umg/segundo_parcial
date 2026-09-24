@@ -28,7 +28,9 @@ export default function LoginPage() {
   // Se lee en el cliente (sin useSearchParams) para no requerir un Suspense boundary en la página estática.
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get("reason");
-    if (reason === "expired") {
+    if (reason === "inactividad") {
+      setNotice("Sesión cerrada por inactividad");
+    } else if (reason === "expired") {
       setNotice("Tu sesión expiró, inicia sesión nuevamente");
     }
   }, []);

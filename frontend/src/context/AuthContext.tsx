@@ -1,9 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@/entities/user.entity";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { LogoutReason, User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
+/** Destino tras cerrar sesión según el motivo. */
+const LOGOUT_REDIRECTS: Record<LogoutReason, string> = {
+  MANUAL: "/",
+  INACTIVITY: "/login?reason=inactividad",
+};
 
 interface AuthContextType {
   user: User | null;
@@ -11,8 +17,13 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
+  /**
+   * Destino de un logout en curso. El layout privado lo usa en lugar de "/login" para no
+   * pisar la redirección (y su ?reason=) cuando el estado de sesión se limpia.
+   */
+  logoutRedirect: string | null;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: LogoutReason) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +32,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [logoutRedirect, setLogoutRedirect] = useState<string | null>(null);
+  const loggingOutRef = useRef(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  /** Resetea el estado del contexto y navega al destino correspondiente al motivo. */
+  const finishLogout = useCallback(
+    (reason: LogoutReason) => {
+      const target = LOGOUT_REDIRECTS[reason] ?? "/";
+      setLogoutRedirect(target);
+      setUser(null);
+      setToken(null);
+      router.replace(target);
+    },
+    [router]
+  );
 
   useEffect(() => {
     const session = AuthService.getStoredSession();
@@ -32,24 +58,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
 
     // El interceptor de ApiClient renueva el token en segundo plano; aquí se refleja en el estado.
-    return AuthService.subscribe((updated) => {
+    const unsubscribeSession = AuthService.subscribe((updated) => {
       setUser(updated?.user ?? null);
       setToken(updated?.token ?? null);
     });
-  }, []);
+
+    // Logout hecho en otra pestaña: el servidor ya fue notificado, solo se cierra localmente.
+    const unsubscribeRemote = AuthService.onRemoteLogout((reason) => {
+      console.info(`[Auth] Sesión cerrada en otra pestaña [${reason}]`);
+      AuthService.clearLocalSession();
+      finishLogout(reason);
+    });
+
+    return () => {
+      unsubscribeSession();
+      unsubscribeRemote();
+    };
+  }, [finishLogout]);
+
+  // Una vez que se llegó al destino del logout, se olvida la redirección pendiente.
+  useEffect(() => {
+    if (logoutRedirect && pathname === logoutRedirect.split("?")[0]) {
+      setLogoutRedirect(null);
+    }
+  }, [pathname, logoutRedirect]);
 
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
+    setLogoutRedirect(null);
     setUser(session.user);
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
-    setUser(null);
-    setToken(null);
-    router.push("/");
-  };
+  /** Único punto de cierre de sesión (manual e inactividad). */
+  const logout = useCallback(
+    async (reason: LogoutReason = "MANUAL") => {
+      if (loggingOutRef.current) return;
+      loggingOutRef.current = true;
+      try {
+        await AuthService.logout(reason);
+      } finally {
+        finishLogout(reason);
+        loggingOutRef.current = false;
+      }
+    },
+    [finishLogout]
+  );
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
   const isAuthenticated = !!token && !!user;
@@ -62,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isAdmin,
         loading,
+        logoutRedirect,
         login,
         logout,
       }}

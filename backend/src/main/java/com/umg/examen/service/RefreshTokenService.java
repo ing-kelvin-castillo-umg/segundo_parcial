@@ -3,6 +3,7 @@ package com.umg.examen.service;
 import com.umg.examen.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface RefreshTokenService {
 
@@ -29,11 +30,17 @@ public interface RefreshTokenService {
      */
     RotationResult rotate(String rawToken);
 
-    /** Revoca un refresh token puntual. Devuelve false si no existía o ya estaba revocado. */
-    boolean revoke(String rawToken, String reason);
+    /**
+     * Revoca un refresh token puntual con el motivo indicado.
+     * Devuelve el dueño del token, o vacío si no existía o ya estaba revocado.
+     */
+    Optional<User> revoke(String rawToken, String reason);
 
     /** Revoca todos los refresh tokens activos del usuario. */
     int revokeAllForUser(User user, String reason);
+
+    /** Elimina los refresh tokens cuya fecha de expiración ya pasó. */
+    int purgeExpired();
 
     long getRefreshExpirationMs();
 }

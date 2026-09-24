@@ -1,6 +1,7 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
@@ -9,6 +10,7 @@ import com.umg.examen.exception.InvalidRefreshTokenException;
 import com.umg.examen.mapper.UserMapper;
 import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.JwtTokenProvider;
+import com.umg.examen.service.AccessTokenBlacklistService;
 import com.umg.examen.service.AuthService;
 import com.umg.examen.service.RefreshTokenService;
 import org.slf4j.Logger;
@@ -23,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -34,17 +38,20 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RefreshTokenService refreshTokenService;
+    private final AccessTokenBlacklistService accessTokenBlacklistService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtTokenProvider tokenProvider,
                            UserRepository userRepository,
                            UserMapper userMapper,
-                           RefreshTokenService refreshTokenService) {
+                           RefreshTokenService refreshTokenService,
+                           AccessTokenBlacklistService accessTokenBlacklistService) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.refreshTokenService = refreshTokenService;
+        this.accessTokenBlacklistService = accessTokenBlacklistService;
     }
 
     @Override
@@ -77,6 +84,30 @@ public class AuthServiceImpl implements AuthService {
                 user.getUsername(), userMapper.toRoleNames(user));
 
         return buildAuthResponse(user, accessToken, rotation.refreshToken());
+    }
+
+    @Override
+    @Transactional
+    public void logout(LogoutRequest request, String accessToken) {
+        String reason = request != null ? request.resolvedReason() : LogoutRequest.REASON_MANUAL;
+        String rawRefreshToken = request != null ? request.getRefreshToken() : null;
+
+        Optional<User> refreshOwner = refreshTokenService.revoke(rawRefreshToken, reason);
+
+        // Solo se pone en lista negra un access token todavía válido; uno expirado ya no sirve.
+        Optional<JwtTokenProvider.AccessTokenInfo> accessInfo = tokenProvider.readValidToken(accessToken);
+        Optional<User> accessOwner = accessInfo.flatMap(info -> userRepository.findByUsername(info.username()));
+        accessInfo.ifPresent(info -> accessOwner.ifPresent(user ->
+                accessTokenBlacklistService.revoke(
+                        info.jti(),
+                        user,
+                        LocalDateTime.ofInstant(info.expiresAt().toInstant(), ZoneId.systemDefault()),
+                        reason)));
+
+        String username = refreshOwner.or(() -> accessOwner).map(User::getUsername).orElse("desconocido");
+        String jti = accessInfo.map(JwtTokenProvider.AccessTokenInfo::jti).orElse("-");
+        log.info("Sesión cerrada [{}] usuario={} jti={} refreshRevocado={}",
+                reason, username, jti, refreshOwner.isPresent());
     }
 
     @Override

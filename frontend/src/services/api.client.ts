@@ -2,13 +2,15 @@ import { ApiResponseDto, AuthResponseDto } from "@/dtos/auth.dto";
 import { AuthSession } from "@/entities/user.entity";
 import { AuthMapper } from "@/mappers/auth.mapper";
 import { SessionStore } from "./session.store";
+import { SessionSync } from "./session.sync";
 
 const LOGIN_ENDPOINT = "/api/auth/login";
 const REFRESH_ENDPOINT = "/api/auth/refresh";
+const LOGOUT_ENDPOINT = "/api/auth/logout";
 const SESSION_EXPIRED_REDIRECT = "/login?reason=expired";
 
 /** Endpoints cuyo 401 no debe disparar un refresh (evita bucles). */
-const NO_REFRESH_ENDPOINTS = [LOGIN_ENDPOINT, REFRESH_ENDPOINT];
+const NO_REFRESH_ENDPOINTS = [LOGIN_ENDPOINT, REFRESH_ENDPOINT, LOGOUT_ENDPOINT];
 
 export class ApiClient {
   /** Única promesa de refresh en vuelo (single-flight) compartida por todas las peticiones. */
@@ -139,6 +141,7 @@ export class ApiClient {
     // Se limpia el almacenamiento sin notificar a React: si AuthContext cambiara de estado,
     // el layout del dashboard redirigiría a /login y se perdería ?reason=expired.
     SessionStore.clear({ notify: false });
+    SessionSync.clearActivity();
     if (typeof window !== "undefined") {
       window.location.replace(SESSION_EXPIRED_REDIRECT);
     }

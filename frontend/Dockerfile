@@ -15,6 +15,12 @@ COPY . .
 # Deshabilitar telemetría de Next.js en build
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Temporizador de inactividad (públicas: se incrustan en el bundle del cliente durante el build)
+ARG NEXT_PUBLIC_IDLE_TIMEOUT_MS=30000
+ARG NEXT_PUBLIC_IDLE_WARNING_MS=10000
+ENV NEXT_PUBLIC_IDLE_TIMEOUT_MS=${NEXT_PUBLIC_IDLE_TIMEOUT_MS}
+ENV NEXT_PUBLIC_IDLE_WARNING_MS=${NEXT_PUBLIC_IDLE_WARNING_MS}
+
 RUN npm run build
 
 # Stage 3: Runner

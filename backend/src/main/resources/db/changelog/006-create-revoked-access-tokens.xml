@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Lista negra de access tokens (por jti) invalidados antes de su expiración natural -->
+    <changeSet id="006-1-create-revoked-access-tokens-table" author="umg">
+        <createTable tableName="revoked_access_tokens">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_revoked_access_tokens"/>
+            </column>
+            <column name="jti" type="VARCHAR(36)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_revoked_access_tokens_jti"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Expiración original del access token: pasada esta fecha el registro puede limpiarse -->
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(50)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="revoked_access_tokens" baseColumnNames="user_id"
+                                 constraintName="fk_revoked_access_tokens_user"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="revoked_access_tokens" indexName="idx_revoked_access_tokens_expires_at">
+            <column name="expires_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

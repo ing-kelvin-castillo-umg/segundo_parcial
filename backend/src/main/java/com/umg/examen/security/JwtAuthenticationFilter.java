@@ -1,5 +1,6 @@
 package com.umg.examen.security;
 
+import com.umg.examen.service.AccessTokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,10 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final AccessTokenBlacklistService accessTokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
+                                   CustomUserDetailsService userDetailsService,
+                                   AccessTokenBlacklistService accessTokenBlacklistService) {
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
+        this.accessTokenBlacklistService = accessTokenBlacklistService;
     }
 
     @Override
@@ -39,7 +44,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     ? tokenProvider.getTokenStatus(jwt)
                     : null;
 
-            if (status == JwtTokenProvider.TokenStatus.EXPIRED || status == JwtTokenProvider.TokenStatus.INVALID) {
+            // Un token con firma válida pero cuyo jti fue revocado en un logout ya no autentica.
+            if (status == JwtTokenProvider.TokenStatus.VALID
+                    && accessTokenBlacklistService.isRevoked(tokenProvider.getJtiFromJwt(jwt))) {
+                log.info("Access token revocado rechazado (jti en lista negra) path={}", request.getServletPath());
+                status = JwtTokenProvider.TokenStatus.REVOKED;
+            }
+
+            if (status != null && status != JwtTokenProvider.TokenStatus.VALID) {
                 // El entry point usa este atributo para responder 401 con un mensaje específico.
                 request.setAttribute(JwtAuthenticationEntryPoint.TOKEN_STATUS_ATTRIBUTE, status);
             } else if (status == JwtTokenProvider.TokenStatus.VALID) {

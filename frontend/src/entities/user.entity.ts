@@ -17,3 +17,6 @@ export interface AuthSession {
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
+
+/** Motivo del cierre de sesión que se envía al backend. */
+export type LogoutReason = 'INACTIVITY' | 'MANUAL';

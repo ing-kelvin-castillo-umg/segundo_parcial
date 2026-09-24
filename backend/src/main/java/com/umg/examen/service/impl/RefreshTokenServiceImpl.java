@@ -19,6 +19,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Optional;
 
 @Service
 public class RefreshTokenServiceImpl implements RefreshTokenService {
@@ -103,24 +104,29 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public boolean revoke(String rawToken, String reason) {
+    public Optional<User> revoke(String rawToken, String reason) {
         if (!StringUtils.hasText(rawToken)) {
-            return false;
+            return Optional.empty();
         }
         return refreshTokenRepository.findByTokenHash(hash(rawToken))
                 .filter(token -> !token.isRevoked())
                 .map(token -> {
                     token.revoke(reason);
                     log.info("Refresh token revocado ({}) para usuario={}", reason, token.getUser().getUsername());
-                    return true;
-                })
-                .orElse(false);
+                    return token.getUser();
+                });
     }
 
     @Override
     @Transactional
     public int revokeAllForUser(User user, String reason) {
         return refreshTokenRepository.revokeAllActiveByUser(user, reason, LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public int purgeExpired() {
+        return refreshTokenRepository.deleteAllExpired(LocalDateTime.now());
     }
 
     @Override

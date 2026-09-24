@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import { InactivityGuard } from "@/components/InactivityGuard";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -11,14 +12,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, logoutRedirect } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login");
+      // Si hay un logout en curso se respeta su destino (ej. /login?reason=inactividad).
+      router.replace(logoutRedirect ?? "/login");
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, logoutRedirect, router]);
 
   if (loading) {
     return (
@@ -42,6 +44,10 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {children}
       </div>
+
+      {/* Cierre de sesión por inactividad (solo en el área privada) */}
+      <InactivityGuard />
+
     </div>
   );
 }

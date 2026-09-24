@@ -10,10 +10,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,8 +28,13 @@ public class JwtTokenProvider {
     public enum TokenStatus {
         VALID,
         EXPIRED,
-        INVALID
+        INVALID,
+        /** Firma y expiración válidas, pero su jti está en la lista negra (logout). */
+        REVOKED
     }
+
+    /** Datos de un access token válido necesarios para revocarlo. */
+    public record AccessTokenInfo(String jti, String username, Date expiresAt) {}
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -77,6 +84,19 @@ public class JwtTokenProvider {
 
     public Date getExpirationFromJwt(String token) {
         return parseClaims(token).getExpiration();
+    }
+
+    /** Devuelve jti, usuario y expiración si el token tiene firma válida y no ha expirado. */
+    public Optional<AccessTokenInfo> readValidToken(String token) {
+        if (!StringUtils.hasText(token)) {
+            return Optional.empty();
+        }
+        try {
+            Claims claims = parseClaims(token);
+            return Optional.of(new AccessTokenInfo(claims.getId(), claims.getSubject(), claims.getExpiration()));
+        } catch (JwtException | IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     public boolean validateToken(String authToken) {

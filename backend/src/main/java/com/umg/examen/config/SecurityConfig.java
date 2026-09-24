@@ -76,7 +76,8 @@ public class SecurityConfig {
                         ).permitAll()
                         // Rutas públicas de Autenticación. /api/auth/me queda protegida para que un
                         // access token expirado responda 401 vía JwtAuthenticationEntryPoint.
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh").permitAll()
+                        // /logout es pública porque debe funcionar aunque el access token ya haya expirado.
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                         // Lectura de productos abierta para carrusel y catálogo público
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Creación, edición y eliminación restringida a ROLE_ADMIN

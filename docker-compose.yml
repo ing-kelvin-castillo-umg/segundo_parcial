@@ -50,6 +50,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Cierre de sesión tras 30 s sin actividad; el aviso aparece 10 s antes
+        NEXT_PUBLIC_IDLE_TIMEOUT_MS: 30000
+        NEXT_PUBLIC_IDLE_WARNING_MS: 10000
     container_name: examen_frontend
     restart: unless-stopped
     environment:

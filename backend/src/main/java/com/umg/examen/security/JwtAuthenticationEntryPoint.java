@@ -36,6 +36,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         if (tokenStatus == JwtTokenProvider.TokenStatus.EXPIRED) {
             code = "TOKEN_EXPIRED";
             message = "El access token ha expirado. Usa /api/auth/refresh para obtener uno nuevo";
+        } else if (tokenStatus == JwtTokenProvider.TokenStatus.REVOKED) {
+            code = "TOKEN_REVOKED";
+            message = "El access token fue revocado porque la sesión se cerró. Inicia sesión nuevamente";
         } else if (tokenStatus == JwtTokenProvider.TokenStatus.INVALID) {
             code = "TOKEN_INVALID";
             message = "El access token es inválido";
