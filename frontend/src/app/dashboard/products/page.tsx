@@ -17,12 +17,16 @@ import {
   RefreshCw,
   CheckCircle,
   AlertTriangle,
+  PackageCheck,
+  Tags,
 } from "lucide-react";
 
 export default function ProductsPage() {
   const { user, isAdmin } = useAuth();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const availableProducts = products.filter((product) => product.inStock).length;
+  const categoryCount = new Set(products.map((product) => product.category)).size;
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -105,7 +109,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 space-y-8 max-w-7xl w-full mx-auto">
+    <div className="p-4 sm:p-8 lg:p-10 space-y-7 max-w-7xl w-full mx-auto">
       {/* Toast alert */}
       {toast && (
         <div
@@ -125,16 +129,16 @@ export default function ProductsPage() {
       )}
 
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl bg-gradient-to-r from-brand-900 to-brand-700 text-white p-6 sm:p-8 shadow-lg shadow-brand-900/15">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center gap-2 text-brand-100 text-xs font-semibold uppercase tracking-wider mb-1">
+            <Boxes className="w-4 h-4 text-copper" />
             <span>Módulo de Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-white tracking-tight">
             Gestión de Productos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-brand-100 mt-1">
             Consulta, busca y gestiona el inventario de productos en tiempo real.
           </p>
         </div>
@@ -145,14 +149,14 @@ export default function ProductsPage() {
             onClick={loadProducts}
             disabled={loading}
             title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-colors disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-copper" : ""}`} />
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/20 text-xs font-semibold text-white">
             {isAdmin ? (
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-copper" />
             ) : (
               <UserIcon className="w-4 h-4 text-emerald-600" />
             )}
@@ -160,8 +164,8 @@ export default function ProductsPage() {
             <span
               className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                 isAdmin
-                  ? "bg-indigo-100 text-indigo-800"
-                  : "bg-emerald-100 text-emerald-800"
+                  ? "bg-copper text-brand-950"
+                  : "bg-brand-100 text-brand-900"
               }`}
             >
               {isAdmin ? "ADMINISTRADOR" : "USUARIO"}
@@ -169,6 +173,21 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Resumen del inventario">
+        <div className="rounded-2xl bg-white border border-brand-100 p-5 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center"><Boxes className="w-6 h-6" /></div>
+          <div><p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Productos</p><p className="text-2xl font-black text-brand-950">{products.length}</p></div>
+        </div>
+        <div className="rounded-2xl bg-white border border-brand-100 p-5 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><PackageCheck className="w-6 h-6" /></div>
+          <div><p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Disponibles</p><p className="text-2xl font-black text-brand-950">{availableProducts}</p></div>
+        </div>
+        <div className="rounded-2xl bg-white border border-brand-100 p-5 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><Tags className="w-6 h-6" /></div>
+          <div><p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Categorías</p><p className="text-2xl font-black text-brand-950">{categoryCount}</p></div>
+        </div>
+      </section>
 
       {/* Main DataTable */}
       <DataTable

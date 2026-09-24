@@ -36,3 +36,6 @@ frontend/.env.production.local
 # Docker & Database
 *.env
 docker_data/
+
+# Informes y capturas de entrega local
+evidencias/
