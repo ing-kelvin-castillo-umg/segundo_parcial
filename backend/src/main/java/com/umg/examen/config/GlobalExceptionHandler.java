@@ -1,6 +1,7 @@
 package com.umg.examen.config;
 
 import com.umg.examen.dto.response.ApiResponse;
+import com.umg.examen.exception.TokenRefreshException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -38,6 +39,12 @@ public class GlobalExceptionHandler {
         });
         ApiResponse<Map<String, String>> response = new ApiResponse<>(false, "Error de validación de campos", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ApiResponse<String>> handleTokenRefresh(TokenRefreshException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(RuntimeException.class)

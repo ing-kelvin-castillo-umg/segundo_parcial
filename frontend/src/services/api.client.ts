@@ -1,6 +1,18 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = ""; // Las llamadas van a rutas relativas /api/... resueltas por el proxy de Next.js
+const API_BASE_URL = "";
+
+let refreshPromise: Promise<{ token: string; refreshToken: string }> | null = null;
+
+async function refreshAccessToken(): Promise<{ token: string; refreshToken: string }> {
+  if (!refreshPromise) {
+    const { AuthService } = await import("./auth.service");
+    refreshPromise = AuthService.refresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
 
 export class ApiClient {
   private static getToken(): string | null {
@@ -10,7 +22,7 @@ export class ApiClient {
     return null;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  static async request<T>(endpoint: string, options: RequestInit = {}, isRetry: boolean = false): Promise<ApiResponseDto<T>> {
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const token = this.getToken();
 
@@ -29,6 +41,21 @@ export class ApiClient {
         ...options,
         headers,
       });
+
+      if (response.status === 401 && !isRetry && !endpoint.includes("/api/auth/")) {
+        try {
+          await refreshAccessToken();
+          return this.request<T>(endpoint, options, true);
+        } catch {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("user");
+            window.location.href = "/login?reason=session_expired";
+          }
+          throw new Error("Sesión expirada");
+        }
+      }
 
       const data = await response.json();
 
@@ -49,17 +76,11 @@ export class ApiClient {
   }
 
   static post<T>(endpoint: string, body: any): Promise<ApiResponseDto<T>> {
-    return this.request<T>(endpoint, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    return this.request<T>(endpoint, { method: "POST", body: JSON.stringify(body) });
   }
 
   static put<T>(endpoint: string, body: any): Promise<ApiResponseDto<T>> {
-    return this.request<T>(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(body),
-    });
+    return this.request<T>(endpoint, { method: "PUT", body: JSON.stringify(body) });
   }
 
   static delete<T>(endpoint: string): Promise<ApiResponseDto<T>> {

@@ -9,5 +9,5 @@
     <include file="db/changelog/002-insert-roles-users.xml"/>
     <include file="db/changelog/003-create-products.xml"/>
     <include file="db/changelog/004-insert-initial-products.xml"/>
-
+    <include file="db/changelog/005-create-refresh-tokens.xml"/>
 </databaseChangeLog>

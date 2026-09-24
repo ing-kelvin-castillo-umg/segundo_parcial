@@ -35,7 +35,8 @@ services:
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      JWT_EXPIRATION_MS: 86400000
+      # 2 minutos, valor bajo a propósito para poder demostrar el refresh token en la evidencia del examen.
+      JWT_EXPIRATION_MS: 120000
     ports:
       - "8080:8080"
     depends_on:
@@ -49,11 +50,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        BACKEND_URL: http://localhost:8080
+        BACKEND_URL: http://backend:8080
     container_name: examen_frontend
     restart: unless-stopped
     environment:
-      BACKEND_URL: http://localhost:8080
+      # NUNCA cambiar a localhost: dentro de la red de Docker, "backend" es el hostname del servicio backend, no localhost.
+      BACKEND_URL: http://backend:8080
     ports:
       - "3000:3000"
     depends_on:
