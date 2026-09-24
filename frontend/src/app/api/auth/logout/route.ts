@@ -9,7 +9,10 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const refreshToken = readRefreshCookie(request);
   if (refreshToken) {
-    await backendFetch("/api/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }) });
+    // Motivo opcional enviado por el frontend (p. ej. INACTIVITY); cualquier otro valor se ignora.
+    const body = await request.json().catch(() => null);
+    const reason = body?.reason === "INACTIVITY" ? "INACTIVITY" : undefined;
+    await backendFetch("/api/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken, reason }) });
   }
   const response = NextResponse.json({ success: true, message: "Sesión cerrada exitosamente", data: null });
   clearRefreshCookie(response, request);

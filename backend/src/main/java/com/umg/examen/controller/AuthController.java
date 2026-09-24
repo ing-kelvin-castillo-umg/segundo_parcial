@@ -40,9 +40,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Cerrar sesión", description = "Revoca la sesión asociada al refresh token. Funciona aunque el access token ya haya expirado. Es idempotente")
+    @Operation(summary = "Cerrar sesión", description = "Revoca la sesión asociada al refresh token e invalida su renovación. Funciona aunque el access token ya haya expirado. Acepta el motivo opcional INACTIVITY (cierre automático por inactividad). Es idempotente")
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody RefreshTokenRequest request) {
-        authService.logout(request.getRefreshToken());
+        authService.logout(request.getRefreshToken(), request.getReason());
         return ResponseEntity.ok(ApiResponse.success("Sesión cerrada exitosamente", null));
     }
 

@@ -6,6 +6,7 @@ import com.umg.examen.exception.InvalidRefreshTokenException;
 import com.umg.examen.repository.RefreshTokenRepository;
 import com.umg.examen.service.IssuedRefreshToken;
 import com.umg.examen.service.RefreshTokenService;
+import com.umg.examen.service.RevocationReason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenServiceImpl.class);
 
     private static final String REASON_ROTATED = "ROTATED";
-    private static final String REASON_LOGOUT = "LOGOUT";
     private static final String REASON_REUSE = "REUSE_DETECTED";
     private static final String REASON_EXPIRED = "EXPIRED";
 
@@ -80,9 +80,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public void revoke(String rawToken) {
-        repository.findByTokenHashForUpdate(hash(rawToken))
-                .ifPresent(token -> repository.revokeFamily(token.getFamilyId(), Instant.now(), REASON_LOGOUT));
+    public void revoke(String rawToken, RevocationReason reason) {
+        repository.findByTokenHashForUpdate(hash(rawToken)).ifPresent(token -> {
+            // Se lee el usuario antes de revocar: revokeFamily limpia el contexto de persistencia.
+            String username = token.getUser().getUsername();
+            repository.revokeFamily(token.getFamilyId(), Instant.now(), reason.name());
+            // Solo se registra el usuario y el motivo; nunca el token.
+            log.info("Sesión del usuario '{}' cerrada. Motivo: {}", username, reason);
+        });
     }
 
     private IssuedRefreshToken create(User user, String familyId, Instant now, Instant sessionExpiresAt) {

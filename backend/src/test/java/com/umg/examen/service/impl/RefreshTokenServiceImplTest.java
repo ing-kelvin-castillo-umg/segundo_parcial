@@ -5,6 +5,7 @@ import com.umg.examen.entity.User;
 import com.umg.examen.exception.InvalidRefreshTokenException;
 import com.umg.examen.repository.RefreshTokenRepository;
 import com.umg.examen.service.IssuedRefreshToken;
+import com.umg.examen.service.RevocationReason;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -169,7 +170,7 @@ class RefreshTokenServiceImplTest {
         RefreshToken current = stored("t", Instant.now().plus(Duration.ofDays(1)), Instant.now().plus(Duration.ofDays(10)), null);
         when(repository.findByTokenHashForUpdate(sha256("t"))).thenReturn(Optional.of(current));
 
-        service.revoke("t");
+        service.revoke("t", RevocationReason.LOGOUT);
 
         verify(repository).revokeFamily(eq("familia-1"), any(Instant.class), eq("LOGOUT"));
     }
@@ -178,7 +179,7 @@ class RefreshTokenServiceImplTest {
     void revoke_tokenDesconocido_esIdempotente() throws Exception {
         when(repository.findByTokenHashForUpdate(sha256("nada"))).thenReturn(Optional.empty());
 
-        assertDoesNotThrow(() -> service.revoke("nada"));
+        assertDoesNotThrow(() -> service.revoke("nada", RevocationReason.LOGOUT));
         verify(repository, never()).revokeFamily(any(), any(), any());
     }
 }

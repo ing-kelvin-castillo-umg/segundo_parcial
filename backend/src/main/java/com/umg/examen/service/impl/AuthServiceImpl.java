@@ -12,6 +12,7 @@ import com.umg.examen.security.JwtTokenProvider;
 import com.umg.examen.service.AuthService;
 import com.umg.examen.service.IssuedRefreshToken;
 import com.umg.examen.service.RefreshTokenService;
+import com.umg.examen.service.RevocationReason;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -74,8 +75,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void logout(String refreshToken) {
-        refreshTokenService.revoke(refreshToken);
+    public void logout(String refreshToken, String reason) {
+        refreshTokenService.revoke(refreshToken, RevocationReason.from(reason));
     }
 
     @Override

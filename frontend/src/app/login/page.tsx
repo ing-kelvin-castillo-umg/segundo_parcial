@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -13,13 +13,23 @@ import {
   AlertCircle,
   Loader2,
   ChevronLeft,
+  Clock,
 } from "lucide-react";
+import { INACTIVITY_MESSAGE, INACTIVITY_REASON } from "@/services/idle.storage";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("reason") === INACTIVITY_REASON) {
+      setNotice(INACTIVITY_MESSAGE);
+      window.history.replaceState(null, "", "/login"); // el aviso no se repite al recargar
+    }
+  }, []);
 
   const { login } = useAuth();
   const router = useRouter();
@@ -103,6 +113,14 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+
+        {/* Aviso informativo: cierre de sesión por inactividad */}
+        {notice && (
+          <div role="status" className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+            <Clock className="w-4 h-4 shrink-0" />
+            <span>{notice}</span>
+          </div>
+        )}
 
         {/* Error Notification */}
         {error && (

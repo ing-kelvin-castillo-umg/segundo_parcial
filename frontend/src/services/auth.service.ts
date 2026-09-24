@@ -2,6 +2,7 @@ import { AuthResponseDto, UserResponseDto } from "@/dtos/auth.dto";
 import { AuthSession, User } from "@/entities/user.entity";
 import { AuthMapper } from "@/mappers/auth.mapper";
 import { ApiClient } from "./api.client";
+import { LAST_ACTIVITY_KEY, touchLastActivity } from "./idle.storage";
 
 export class AuthService {
   static async login(credentials: { username: string; password: string }): Promise<AuthSession> {
@@ -12,6 +13,7 @@ export class AuthService {
     if (typeof window !== "undefined") {
       localStorage.setItem("token", session.token);
       localStorage.setItem("user", JSON.stringify(session.user));
+      touchLastActivity(); // inicia el conteo de inactividad de la nueva sesión
     }
 
     return session;
@@ -26,11 +28,17 @@ export class AuthService {
    * Cierra la sesión local de inmediato y revoca el refresh token en el backend (vía BFF).
    * Si la revocación falla, la sesión local igualmente queda cerrada.
    */
-  static logout(): Promise<void> {
+  static logout(reason?: "inactivity"): Promise<void> {
     if (typeof window === "undefined") return Promise.resolve();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    return fetch("/api/auth/logout", { method: "POST", keepalive: true })
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+    return fetch("/api/auth/logout", {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reason === "inactivity" ? { reason: "INACTIVITY" } : {}),
+    })
       .then(() => undefined)
       .catch(() => undefined);
   }

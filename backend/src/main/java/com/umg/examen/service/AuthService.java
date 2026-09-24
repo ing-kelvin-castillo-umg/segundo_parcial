@@ -11,6 +11,6 @@ public interface AuthService {
     /** Rota el refresh token y emite un nuevo access token. */
     AuthResponse refresh(String refreshToken);
 
-    /** Revoca la sesión asociada al refresh token. */
-    void logout(String refreshToken);
+    /** Revoca la sesión asociada al refresh token. El motivo (p. ej. INACTIVITY) es opcional. */
+    void logout(String refreshToken, String reason);
 }

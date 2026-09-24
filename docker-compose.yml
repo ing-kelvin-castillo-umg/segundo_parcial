@@ -55,6 +55,8 @@ services:
     environment:
       # URL interna del backend: solo la conoce el servidor de Next.js (BFF)
       BACKEND_URL: http://backend:8080
+      # Inactividad del usuario antes de cerrar la sesión automáticamente (3 minutos)
+      IDLE_TIMEOUT_MS: 180000
     ports:
       - "3000:3000"
     depends_on:

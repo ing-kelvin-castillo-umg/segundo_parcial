@@ -96,6 +96,9 @@ export class TokenManager {
     }
     if (!response.ok) return "error";
 
+    // Si mientras tanto se cerró la sesión (logout, inactividad u otra pestaña), la respuesta tardía se descarta.
+    if (!this.getToken()) return "expired";
+
     try {
       const body = await response.json();
       const session = AuthMapper.toSession(body.data as AuthResponseDto);

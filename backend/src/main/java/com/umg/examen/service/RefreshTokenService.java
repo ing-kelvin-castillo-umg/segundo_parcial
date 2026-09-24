@@ -14,6 +14,6 @@ public interface RefreshTokenService {
      */
     IssuedRefreshToken rotate(String rawToken);
 
-    /** Revoca toda la sesión a la que pertenece el token. Es idempotente. */
-    void revoke(String rawToken);
+    /** Revoca toda la sesión a la que pertenece el token, registrando el motivo. Es idempotente. */
+    void revoke(String rawToken, RevocationReason reason);
 }
