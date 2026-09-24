@@ -22,9 +22,9 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
-        <p className="text-sm">Verificando sesión...</p>
+      <div className="min-h-screen bg-ink-950 flex flex-col items-center justify-center text-ink-300">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-400 mb-3" />
+        <p className="text-sm">Verificando sesion...</p>
       </div>
     );
   }
@@ -34,11 +34,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      {/* Left Sidebar */}
+    <div className="min-h-screen flex bg-ink-50 text-ink-900">
       <Sidebar />
-
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {children}
       </div>
