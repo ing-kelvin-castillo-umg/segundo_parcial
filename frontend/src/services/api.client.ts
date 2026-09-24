@@ -1,7 +1,5 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 export class ApiClient {
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
@@ -11,7 +9,7 @@ export class ApiClient {
   }
 
   static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
-    const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const token = this.getToken();
 
     const headers: Record<string, string> = {
@@ -28,6 +26,7 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: "same-origin",
       });
 
       const data = await response.json();
@@ -58,6 +57,13 @@ export class ApiClient {
   static put<T>(endpoint: string, body: any): Promise<ApiResponseDto<T>> {
     return this.request<T>(endpoint, {
       method: "PUT",
+      body: JSON.stringify(body),
+    });
+  }
+
+  static patch<T>(endpoint: string, body: any): Promise<ApiResponseDto<T>> {
+    return this.request<T>(endpoint, {
+      method: "PATCH",
       body: JSON.stringify(body),
     });
   }
