@@ -43,11 +43,32 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = tokenProvider.generateToken(authentication);
+        String refreshToken = tokenProvider.generateRefreshToken(request.getUsername());
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + request.getUsername()));
 
-        return userMapper.toAuthResponse(user, token);
+        AuthResponse response = userMapper.toAuthResponse(user, token);
+        response.setRefreshToken(refreshToken);
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResponse refresh(String refreshToken) {
+        if (!tokenProvider.validateRefreshToken(refreshToken)) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Refresh token inválido o expirado");
+        }
+        String username = tokenProvider.getUsernameFromJwt(refreshToken);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("Refresh token inválido o expirado"));
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Usuario deshabilitado");
+        }
+        java.util.List<String> roles = user.getRoles().stream().map(com.umg.examen.entity.Role::getName).toList();
+        AuthResponse response = userMapper.toAuthResponse(user, tokenProvider.generateTokenFromUsername(username, roles));
+        response.setRefreshToken(tokenProvider.generateRefreshToken(username));
+        return response;
     }
 
     @Override

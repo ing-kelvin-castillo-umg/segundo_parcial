@@ -31,6 +31,16 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Inicio de sesión exitoso", authResponse));
     }
 
+    @PostMapping("/refresh")
+    @Operation(summary = "Renovar credenciales usando un refresh token")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody java.util.Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Refresh token requerido"));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Credenciales renovadas", authService.refresh(refreshToken)));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")
