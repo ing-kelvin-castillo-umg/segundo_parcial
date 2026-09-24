@@ -9,6 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        bone: '#FAF7F2',
+        espresso: '#2E211A',
+        coffee: '#4A3728',
         brand: {
           50: '#f0f7ff',
           100: '#e0effe',
