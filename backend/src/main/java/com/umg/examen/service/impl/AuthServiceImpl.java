@@ -1,6 +1,7 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -73,10 +75,31 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void logout(String authorizationHeader, LogoutRequest request) {
+        String accessToken = extractBearerToken(authorizationHeader);
+        if (StringUtils.hasText(accessToken)) {
+            tokenProvider.revokeToken(accessToken);
+        }
+
+        if (request != null && StringUtils.hasText(request.getRefreshToken())) {
+            tokenProvider.revokeToken(request.getRefreshToken());
+        }
+
+        SecurityContextHolder.clearContext();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
         return userMapper.toResponse(user);
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
     }
 }

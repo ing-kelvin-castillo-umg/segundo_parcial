@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Component
@@ -23,6 +25,7 @@ public class JwtTokenProvider {
     private static final String TOKEN_USE_CLAIM = "token_use";
     private static final String ACCESS_TOKEN_USE = "access";
     private static final String REFRESH_TOKEN_USE = "refresh";
+    private final Map<String, Long> revokedTokens = new ConcurrentHashMap<>();
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -84,6 +87,10 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String authToken) {
         try {
+            if (isTokenRevoked(authToken)) {
+                return false;
+            }
+
             Claims claims = parseClaims(authToken);
             return ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
         } catch (SecurityException | MalformedJwtException e) {
@@ -100,6 +107,10 @@ public class JwtTokenProvider {
 
     public boolean validateRefreshToken(String refreshToken) {
         try {
+            if (isTokenRevoked(refreshToken)) {
+                return false;
+            }
+
             Claims claims = parseClaims(refreshToken);
             return REFRESH_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
         } catch (SecurityException | MalformedJwtException e) {
@@ -112,6 +123,26 @@ public class JwtTokenProvider {
             log.error("La cadena de claims del refresh token esta vacia: {}", e.getMessage());
         }
         return false;
+    }
+
+    public void revokeToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            revokedTokens.put(token, claims.getExpiration().getTime());
+            cleanExpiredRevocations();
+        } catch (JwtException | IllegalArgumentException ignored) {
+            revokedTokens.put(token, System.currentTimeMillis());
+        }
+    }
+
+    private boolean isTokenRevoked(String token) {
+        cleanExpiredRevocations();
+        return revokedTokens.containsKey(token);
+    }
+
+    private void cleanExpiredRevocations() {
+        long now = System.currentTimeMillis();
+        revokedTokens.entrySet().removeIf(entry -> entry.getValue() <= now);
     }
 
     private Claims parseClaims(String token) {

@@ -23,11 +23,19 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      try {
+        await ApiClient.post<void>("/api/auth/logout", { refreshToken });
+      } catch (error) {
+        console.error("[AUTH] No se pudo notificar el logout al backend:", error);
+      } finally {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+      }
     }
   }
 

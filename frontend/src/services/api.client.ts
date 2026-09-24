@@ -2,7 +2,8 @@ import { ApiResponseDto, AuthResponseDto } from "@/dtos/auth.dto";
 
 const API_BASE_URL = "";
 const REFRESH_ENDPOINT = "/api/auth/refresh";
-const AUTH_ENDPOINTS = new Set(["/api/auth/login", REFRESH_ENDPOINT]);
+const LOGOUT_ENDPOINT = "/api/auth/logout";
+const AUTH_ENDPOINTS = new Set(["/api/auth/login", REFRESH_ENDPOINT, LOGOUT_ENDPOINT]);
 const REFRESH_THRESHOLD_SECONDS = 10;
 
 export class ApiClient {

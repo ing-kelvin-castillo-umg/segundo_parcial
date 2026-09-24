@@ -5,6 +5,9 @@ import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
 
+const INACTIVITY_LIMIT_MS = 10_000;
+const ACTIVITY_EVENTS = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -12,7 +15,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,8 +63,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
+  useEffect(() => {
+    if (!token || !user) return;
+
+    let inactivityTimer: ReturnType<typeof setTimeout>;
+
+    const closeSessionByInactivity = async () => {
+      console.warn("[AUTH] Sesión cerrada por inactividad. Notificando logout al backend.");
+      await AuthService.logout();
+      setUser(null);
+      setToken(null);
+      sessionStorage.setItem("logoutReason", "inactivity");
+      router.push("/login?reason=inactivity");
+    };
+
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(closeSessionByInactivity, INACTIVITY_LIMIT_MS);
+    };
+
+    ACTIVITY_EVENTS.forEach((eventName) => {
+      window.addEventListener(eventName, resetInactivityTimer, { passive: true });
+    });
+
+    resetInactivityTimer();
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      ACTIVITY_EVENTS.forEach((eventName) => {
+        window.removeEventListener(eventName, resetInactivityTimer);
+      });
+    };
+  }, [token, user, router]);
+
+  const logout = async () => {
+    await AuthService.logout();
     setUser(null);
     setToken(null);
     router.push("/");
