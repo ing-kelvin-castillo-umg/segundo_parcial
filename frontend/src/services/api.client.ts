@@ -1,6 +1,8 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+// Las solicitudes del navegador pasan por los Route Handlers de Next.js.
+// La dirección del backend solo existe dentro de la red de Docker.
+const API_BASE_URL = "";
 
 export class ApiClient {
   private static getToken(): string | null {
