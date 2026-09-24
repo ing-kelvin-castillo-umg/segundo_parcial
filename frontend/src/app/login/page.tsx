@@ -1,181 +1,26 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import {
-  Package,
-  KeyRound,
-  User as UserIcon,
-  ArrowRight,
-  ShieldCheck,
-  AlertCircle,
-  Loader2,
-  ChevronLeft,
-} from "lucide-react";
+import { Package, KeyRound, User as UserIcon, ArrowRight, ShieldCheck, AlertCircle, Loader2, ChevronLeft, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [closedForInactivity, setClosedForInactivity] = useState(false);
+  const [username, setUsername] = useState(""); const [password, setPassword] = useState(""); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null); const [closedForInactivity, setClosedForInactivity] = useState(false);
+  const { login } = useAuth(); const router = useRouter();
+  useEffect(() => setClosedForInactivity(new URLSearchParams(window.location.search).get("reason") === "inactivity"), []);
+  const handleLogin = async (e: React.FormEvent) => { e.preventDefault(); if (!username.trim() || !password.trim()) return setError("Por favor completa todos los campos requeridos."); try { setLoading(true); setError(null); await login(username, password); router.push("/dashboard/products"); } catch (err: any) { setError(err.message || "Usuario o contraseña incorrectos."); } finally { setLoading(false); } };
+  const fillCredentials = (name: string, pass: string) => { setUsername(name); setPassword(pass); setError(null); };
 
-  const { login } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    setClosedForInactivity(new URLSearchParams(window.location.search).get("reason") === "inactivity");
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError("Por favor completa todos los campos requeridos.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      await login(username, password);
-      router.push("/dashboard/products");
-    } catch (err: any) {
-      setError(err.message || "Usuario o contraseña incorrectos.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fillCredentials = (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setError(null);
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 bg-slate-950 text-slate-100 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 -left-32 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Back to Home Link */}
-      <div className="w-full max-w-md mb-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Volver al Inicio</span>
-        </Link>
-      </div>
-
-      {/* Login Card */}
-      <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-500/25">
-            <Package className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">Iniciar Sesión</h2>
-          <p className="text-xs text-slate-400">
-            Ingresa con tu cuenta para acceder a la gestión de productos
-          </p>
-        </div>
-
-        {closedForInactivity && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-200 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>Sesión cerrada por inactividad</span>
-          </div>
-        )}
-
-        {/* Quick Fill Credentials Buttons (Ideal for evaluation!) */}
-        <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Acceso Rápido para Pruebas:
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => fillCredentials("admin", "admin123")}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all hover:scale-[1.02]"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Rol Admin</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillCredentials("user", "user123")}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-all hover:scale-[1.02]"
-            >
-              <UserIcon className="w-3.5 h-3.5" />
-              <span>Rol Usuario</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Error Notification */}
-        {error && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Usuario
-            </label>
-            <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin o user"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
-              Contraseña
-            </label>
-            <div className="relative">
-              <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <span>Entrar al Sistema</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
-      </div>
+  return <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-100 px-4 py-10 sm:px-6"><div className="pointer-events-none absolute -left-24 top-10 h-96 w-96 rounded-full bg-brand-200/55 blur-3xl" /><div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-jade-200/60 blur-3xl" />
+    <div className="relative w-full max-w-md"><Link href="/" className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold text-brand-800 transition hover:text-brand-950"><ChevronLeft className="h-4 w-4" />Volver al catálogo</Link>
+      <section className="rounded-[2rem] border border-white bg-white/90 p-7 shadow-2xl shadow-brand-950/10 backdrop-blur-xl sm:p-8"><div className="mb-7 text-center"><div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-700 to-jade-600 text-white shadow-lg shadow-brand-700/20"><Package className="h-6 w-6" /></div><p className="mb-2 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-jade-700"><Sparkles className="h-3.5 w-3.5" />Acceso seguro</p><h1 className="text-2xl font-black tracking-tight text-zinc-900">Bienvenido de nuevo</h1><p className="mt-2 text-xs text-stone-500">Ingresa para administrar el inventario de productos.</p></div>
+        {closedForInactivity && <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-900"><AlertCircle className="h-4 w-4 shrink-0" />Sesión cerrada por inactividad</div>}
+        <div className="mb-5 rounded-2xl border border-stone-200 bg-stone-50 p-3.5"><span className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-stone-500">Acceso rápido de evaluación</span><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => fillCredentials("admin", "admin123")} className="flex items-center justify-center gap-1.5 rounded-xl border border-jade-200 bg-jade-50 px-3 py-2 text-xs font-bold text-jade-800 transition hover:bg-jade-100"><ShieldCheck className="h-3.5 w-3.5" />Admin</button><button type="button" onClick={() => fillCredentials("user", "user123")} className="flex items-center justify-center gap-1.5 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-xs font-bold text-brand-800 transition hover:bg-brand-100"><UserIcon className="h-3.5 w-3.5" />Usuario</button></div></div>
+        {error && <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
+        <form onSubmit={handleLogin} className="space-y-4"><label className="block text-xs font-bold uppercase tracking-wide text-zinc-700">Usuario<div className="relative mt-1.5"><UserIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" /><input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin o user" className="w-full rounded-xl border border-stone-300 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-900 placeholder:text-stone-400 transition focus:border-jade-500 focus:outline-none focus:ring-2 focus:ring-jade-200" /></div></label><label className="block text-xs font-bold uppercase tracking-wide text-zinc-700">Contraseña<div className="relative mt-1.5"><KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" /><input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full rounded-xl border border-stone-300 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-900 placeholder:text-stone-400 transition focus:border-jade-500 focus:outline-none focus:ring-2 focus:ring-jade-200" /></div></label><button type="submit" disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-700/20 transition hover:bg-brand-800 disabled:opacity-50">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><span>Entrar al sistema</span><ArrowRight className="h-4 w-4" /></>}</button></form>
+      </section>
     </div>
-  );
+  </div>;
 }

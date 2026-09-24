@@ -1,129 +1,52 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import {
-  Package,
-  Boxes,
-  LogOut,
-  ShieldAlert,
-  User as UserIcon,
-  Home,
-  Clock3,
-  AlertTriangle,
-} from "lucide-react";
+import { Package, Boxes, LogOut, User as UserIcon, Home, Clock3, AlertTriangle, Menu, X } from "lucide-react";
 import { formatSessionTime } from "@/config/session";
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { user, isAdmin, logout, remainingSeconds, isInactivityWarning } = useAuth();
-
-  const navItems = [
-    {
-      name: "Productos",
-      href: "/dashboard/products",
-      icon: Boxes,
-    },
-  ];
+  const [isOpen, setIsOpen] = useState(false);
+  const close = () => setIsOpen(false);
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col shrink-0 min-h-screen border-r border-slate-800">
-      {/* Brand Header */}
-      <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-          <Package className="w-5 h-5" />
+    <>
+      <button onClick={() => setIsOpen(true)} aria-label="Abrir menú" className="fixed left-4 top-4 z-30 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-800 text-white shadow-lg shadow-brand-950/20 lg:hidden">
+        <Menu className="h-5 w-5" />
+      </button>
+      {isOpen && <button aria-label="Cerrar menú" onClick={close} className="fixed inset-0 z-30 bg-zinc-950/45 backdrop-blur-[2px] lg:hidden" />}
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-gradient-to-b from-brand-950 via-brand-900 to-jade-950 text-brand-50 shadow-2xl transition-transform duration-300 lg:static lg:min-h-screen lg:translate-x-0 lg:shadow-none ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="flex items-center gap-3 border-b border-white/10 p-6">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-jade-400 text-brand-950 shadow-lg shadow-brand-950/30"><Package className="h-5 w-5" /></div>
+          <div className="flex-1"><h2 className="font-bold text-white">UMG Dashboard</h2><span className="text-xs text-brand-200">Centro de inventario</span></div>
+          <button onClick={close} aria-label="Cerrar menú" className="rounded-lg p-1 text-brand-100 hover:bg-white/10 lg:hidden"><X className="h-5 w-5" /></button>
         </div>
-        <div>
-          <h2 className="font-bold text-white text-base tracking-tight leading-none">
-            UMG Dashboard
-          </h2>
-          <span className="text-xs text-slate-400">Examen Parcial</span>
-        </div>
-      </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-4 py-6 space-y-1.5">
-        <p className="px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-          Módulos del Sistema
-        </p>
-
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Icon className="w-5 h-5 shrink-0" />
-              <span>{item.name}</span>
-            </Link>
-          );
-        })}
-
-        <div className="pt-4 border-t border-slate-800/80 my-4">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
-          >
-            <Home className="w-5 h-5 shrink-0" />
-            <span>Ver Catálogo Público</span>
+        <nav className="flex-1 space-y-2 px-4 py-6">
+          <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-brand-300">Navegación</p>
+          <Link href="/dashboard/products" onClick={close} className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition ${pathname.startsWith("/dashboard/products") ? "bg-white text-brand-900 shadow-lg shadow-brand-950/25" : "text-brand-100 hover:bg-white/10 hover:text-white"}`}>
+            <Boxes className="h-5 w-5" /> Productos
           </Link>
-        </div>
-      </nav>
+          <div className="my-5 border-t border-white/10" />
+          <Link href="/" onClick={close} className="flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium text-brand-100 transition hover:bg-white/10 hover:text-white"><Home className="h-5 w-5" /> Ver catálogo público</Link>
+        </nav>
 
-      {/* User Profile Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/50">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-xs shrink-0 ${isAdmin ? "bg-indigo-600 ring-2 ring-indigo-400" : "bg-emerald-600 ring-2 ring-emerald-400"}`}>
-              {user?.username?.slice(0, 2).toUpperCase() || "US"}
-            </div>
-            <div className="truncate">
-              <p className="text-xs font-semibold text-white truncate">
-                {user?.fullName || user?.username}
-              </p>
-              <p className="text-[11px] text-slate-400 truncate">
-                @{user?.username}
-              </p>
-            </div>
+        <div className="border-t border-white/10 bg-brand-950/30 p-4">
+          <div className="mb-4 flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ${isAdmin ? "bg-jade-500 ring-jade-300" : "bg-brand-600 ring-brand-300"}`}>{user?.username?.slice(0, 2).toUpperCase() || "US"}</div>
+            <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-white">{user?.fullName || user?.username}</p><p className="truncate text-[11px] text-brand-200">@{user?.username}</p></div>
+            <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase ${isAdmin ? "border-jade-300/30 bg-jade-400/15 text-jade-100" : "border-brand-300/30 bg-brand-400/15 text-brand-100"}`}>{isAdmin ? "Admin" : "User"}</span>
           </div>
-          <span
-            className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 uppercase tracking-wide ${
-              isAdmin
-                ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-            }`}
-          >
-            {isAdmin ? "Admin" : "User"}
-          </span>
+          <div className={`mb-3 flex items-center gap-2 rounded-xl border px-3 py-2 text-[11px] font-semibold ${isInactivityWarning ? "border-amber-300/40 bg-amber-400/15 text-amber-100" : "border-brand-300/20 bg-white/5 text-brand-100"}`}>
+            {isInactivityWarning ? <AlertTriangle className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}<span>{isInactivityWarning ? "Sesión por expirar" : "Sesión activa"} · {formatSessionTime(remainingSeconds)}</span>
+          </div>
+          <button onClick={() => void logout()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-300/20 bg-rose-400/10 px-3 py-2.5 text-xs font-semibold text-rose-100 transition hover:border-transparent hover:bg-rose-500 hover:text-white"><LogOut className="h-3.5 w-3.5" /> Cerrar sesión</button>
         </div>
-
-        <div className={`mb-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-semibold ${
-          isInactivityWarning
-            ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
-            : "border-slate-700 bg-slate-800/70 text-slate-300"
-        }`}>
-          {isInactivityWarning ? <AlertTriangle className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
-          <span>{isInactivityWarning ? "Sesión por expirar" : "Sesión activa"} · {formatSessionTime(remainingSeconds)}</span>
-        </div>
-
-        <button
-          onClick={() => void logout()}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 rounded-lg transition-colors border border-rose-500/20 hover:border-transparent"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Cerrar Sesión</span>
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
