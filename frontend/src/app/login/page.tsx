@@ -24,6 +24,13 @@ export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
 
+  React.useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    if (reason === "session-expired") {
+      setError("Tu sesión expiró. Inicia sesión nuevamente.");
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
