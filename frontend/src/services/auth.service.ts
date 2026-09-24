@@ -23,8 +23,23 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
+  static async logout(reason: "manual" | "inactivity" | "expired" = "manual"): Promise<void> {
+    if (typeof window === "undefined") return;
+
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    try {
+      if (refreshToken) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ refreshToken, reason }),
+          cache: "no-store",
+        });
+      }
+    } catch (error) {
+      console.warn("No se pudo notificar el cierre de sesión al backend:", error);
+    } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");

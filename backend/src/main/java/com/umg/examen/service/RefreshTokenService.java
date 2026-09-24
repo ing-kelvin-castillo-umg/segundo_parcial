@@ -59,6 +59,19 @@ public class RefreshTokenService {
         return refreshToken.getUser();
     }
 
+    @Transactional
+    public String revoke(String rawToken) {
+        return repository.findByTokenHash(hash(rawToken))
+                .map(refreshToken -> {
+                    if (refreshToken.getRevokedAt() == null) {
+                        refreshToken.setRevokedAt(Instant.now());
+                        repository.save(refreshToken);
+                    }
+                    return refreshToken.getUser().getUsername();
+                })
+                .orElse("desconocido");
+    }
+
     private String hash(String rawToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

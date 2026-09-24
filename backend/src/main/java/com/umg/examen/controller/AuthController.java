@@ -1,6 +1,7 @@
 package com.umg.examen.controller;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.ApiResponse;
 import com.umg.examen.dto.response.AuthResponse;
@@ -40,6 +41,16 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         AuthResponse authResponse = authService.refresh(request);
         return ResponseEntity.ok(ApiResponse.success("Token renovado exitosamente", authResponse));
+    }
+
+    @PostMapping("/logout")
+    @Operation(
+            summary = "Cerrar e invalidar sesión",
+            description = "Revoca el refresh token activo y registra el motivo del cierre de sesión"
+    )
+    public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request);
+        return ResponseEntity.ok(ApiResponse.success("Sesión cerrada e invalidada correctamente", null));
     }
 
     @GetMapping("/me")

@@ -25,8 +25,15 @@ export default function LoginPage() {
   const router = useRouter();
 
   React.useEffect(() => {
-    const reason = new URLSearchParams(window.location.search).get("reason");
+    const queryReason = new URLSearchParams(window.location.search).get("reason");
+    const reason = queryReason || sessionStorage.getItem("logoutReason");
+    sessionStorage.removeItem("logoutReason");
+
     if (reason === "session-expired") {
+      setError("Tu sesión expiró. Inicia sesión nuevamente.");
+    } else if (reason === "inactivity") {
+      setError("Sesión cerrada por inactividad");
+    } else if (reason === "expired") {
       setError("Tu sesión expiró. Inicia sesión nuevamente.");
     }
   }, []);

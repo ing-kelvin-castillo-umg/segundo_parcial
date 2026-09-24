@@ -1,6 +1,7 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
@@ -11,6 +12,8 @@ import com.umg.examen.security.JwtTokenProvider;
 import com.umg.examen.service.AuthService;
 import com.umg.examen.service.RefreshTokenService;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
@@ -67,6 +72,13 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = tokenProvider.generateTokenFromUsername(user.getUsername(), roles);
         String rotatedRefreshToken = refreshTokenService.create(user);
         return userMapper.toAuthResponse(user, accessToken, rotatedRefreshToken);
+    }
+
+    @Override
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String username = refreshTokenService.revoke(request.getRefreshToken());
+        log.info("Sesión cerrada e invalidada para el usuario '{}' por motivo '{}'", username, request.getReason());
     }
 
     @Override
