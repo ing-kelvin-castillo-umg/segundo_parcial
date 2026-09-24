@@ -4,6 +4,9 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
+import { useIdleTimer } from "@/hooks/useIdleTimer";
+
+const IDLE_TIMEOUT_MS = 120000; // 2 minutos, mismo tiempo que el access token para poder demostrarlo en la evidencia
 
 interface AuthContextType {
   user: User | null;
@@ -12,7 +15,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: "inactivity" | "manual") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,12 +41,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
+  const logout = async (reason: "inactivity" | "manual" = "manual") => {
+    console.log("[AUTH] logout ejecutado con reason=", reason);
+    await AuthService.logout();
     setUser(null);
     setToken(null);
-    router.push("/");
+    if (reason === "inactivity") {
+      router.push("/login?reason=inactivity");
+    } else {
+      router.push("/");
+    }
   };
+
+  const isAuthenticatedForIdle = !!token && !!user;
+
+  useIdleTimer(
+    IDLE_TIMEOUT_MS,
+    () => {
+      logout("inactivity");
+    },
+    isAuthenticatedForIdle && !loading
+  );
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
   const isAuthenticated = !!token && !!user;

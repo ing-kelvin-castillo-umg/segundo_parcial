@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -15,7 +15,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,6 +23,7 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +49,14 @@ export default function LoginPage() {
     setPassword(p);
     setError(null);
   };
+
+  const reason = searchParams.get("reason");
+  const sessionMessage =
+    reason === "inactivity"
+      ? "Tu sesión se cerró automáticamente por inactividad."
+      : reason === "session_expired"
+      ? "Tu sesión expiró. Por favor inicia sesión de nuevo."
+      : null;
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 bg-slate-950 text-slate-100 relative overflow-hidden">
@@ -103,6 +112,13 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+
+        {sessionMessage && !error && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{sessionMessage}</span>
+          </div>
+        )}
 
         {/* Error Notification */}
         {error && (
@@ -165,5 +181,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
