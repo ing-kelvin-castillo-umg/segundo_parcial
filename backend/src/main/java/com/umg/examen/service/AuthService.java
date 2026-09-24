@@ -5,6 +5,9 @@ import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
 
 public interface AuthService {
-    AuthResponse login(LoginRequest request);
+    record LoginResult(AuthResponse response, String refreshToken) {}
+
+    LoginResult login(LoginRequest request);
+    AuthResponse refreshAccessToken(String refreshToken);
     UserResponse getCurrentUser(String username);
 }

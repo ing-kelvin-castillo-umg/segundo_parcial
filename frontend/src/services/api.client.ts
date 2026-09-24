@@ -1,6 +1,8 @@
-import { ApiResponseDto } from "@/dtos/auth.dto";
+import type { ApiResponseDto, RefreshResponseDto } from "@/dtos/auth.dto";
 
 export class ApiClient {
+  private static refreshPromise: Promise<string> | null = null;
+
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("token");
@@ -8,7 +10,45 @@ export class ApiClient {
     return null;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  private static clearSessionAndRedirect(): void {
+    if (typeof window === "undefined") return;
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+  }
+
+  private static async refreshAccessToken(): Promise<string> {
+    if (!this.refreshPromise) {
+      this.refreshPromise = (async () => {
+        const response = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+        });
+        const data = await response.json() as ApiResponseDto<RefreshResponseDto>;
+
+        if (!response.ok || !data.data?.token) {
+          throw new Error(data.message || "No fue posible renovar la sesión");
+        }
+
+        localStorage.setItem("token", data.data.token);
+        return data.data.token;
+      })().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+
+    return this.refreshPromise;
+  }
+
+  static async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    allowRefresh = true,
+  ): Promise<ApiResponseDto<T>> {
     const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const token = this.getToken();
 
@@ -28,6 +68,17 @@ export class ApiClient {
         headers,
         credentials: "same-origin",
       });
+
+      const isAuthRequest = url === "/api/auth/login" || url === "/api/auth/refresh";
+      if (response.status === 401 && allowRefresh && !isAuthRequest) {
+        try {
+          await this.refreshAccessToken();
+          return this.request<T>(endpoint, options, false);
+        } catch (refreshError) {
+          this.clearSessionAndRedirect();
+          throw refreshError;
+        }
+      }
 
       const data = await response.json();
 

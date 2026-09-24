@@ -75,7 +75,7 @@ public class SecurityConfig {
                                 "/api-docs/**"
                         ).permitAll()
                         // Rutas públicas de Autenticación
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh").permitAll()
                         // Lectura de productos abierta para carrusel y catálogo público
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Creación, edición y eliminación restringida a ROLE_ADMIN

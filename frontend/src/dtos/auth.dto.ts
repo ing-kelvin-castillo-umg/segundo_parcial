@@ -12,6 +12,10 @@ export interface AuthResponseDto {
   roles: string[];
 }
 
+export interface RefreshResponseDto {
+  token: string;
+}
+
 export interface UserResponseDto {
   id: number;
   username: string;

@@ -5,11 +5,14 @@ import com.umg.examen.dto.response.ApiResponse;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.service.AuthService;
+import com.umg.examen.security.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,16 +22,33 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtTokenProvider tokenProvider;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtTokenProvider tokenProvider) {
         this.authService = authService;
+        this.tokenProvider = tokenProvider;
     }
 
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica al usuario con username y password, retornando un token JWT y sus roles asignados")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse authResponse = authService.login(request);
-        return ResponseEntity.ok(ApiResponse.success("Inicio de sesión exitoso", authResponse));
+        AuthService.LoginResult result = authService.login(request);
+        ResponseCookie refreshCookie = createRefreshCookie(result.refreshToken());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(ApiResponse.success("Inicio de sesión exitoso", result.response()));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Renovar token de acceso", description = "Genera un access token nuevo usando la cookie HttpOnly de refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(401).body(ApiResponse.error("Refresh token no proporcionado"));
+        }
+
+        AuthResponse authResponse = authService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(ApiResponse.success("Token de acceso renovado", authResponse));
     }
 
     @GetMapping("/me")
@@ -40,5 +60,15 @@ public class AuthController {
         }
         UserResponse user = authService.getCurrentUser(authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Perfil de usuario obtenido", user));
+    }
+
+    private ResponseCookie createRefreshCookie(String refreshToken) {
+        return ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/api/auth")
+                .maxAge(tokenProvider.getRefreshExpirationMs() / 1000)
+                .build();
     }
 }
