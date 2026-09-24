@@ -10,7 +10,35 @@ export class ApiClient {
     return null;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  private static async refreshAccessToken(): Promise<boolean> {
+    if (typeof window === "undefined") return false;
+
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) return false;
+
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result?.data?.token || !result?.data?.refreshToken) return false;
+
+      localStorage.setItem("token", result.data.token);
+      localStorage.setItem("refreshToken", result.data.refreshToken);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  static async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    hasRetriedAfterRefresh = false,
+  ): Promise<ApiResponseDto<T>> {
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const token = this.getToken();
 
@@ -29,6 +57,15 @@ export class ApiClient {
         ...options,
         headers,
       });
+
+      if (
+        response.status === 401 &&
+        !hasRetriedAfterRefresh &&
+        endpoint !== "/api/auth/refresh" &&
+        await this.refreshAccessToken()
+      ) {
+        return this.request<T>(endpoint, options, true);
+      }
 
       const data = await response.json();
 
