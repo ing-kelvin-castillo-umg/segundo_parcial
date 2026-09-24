@@ -1,7 +1,5 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 export class ApiClient {
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
@@ -11,7 +9,8 @@ export class ApiClient {
   }
 
   static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
-    const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    // The browser only calls the Next.js BFF on the current origin.
+    const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const token = this.getToken();
 
     const headers: Record<string, string> = {
@@ -30,13 +29,23 @@ export class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: ApiResponseDto<T> | undefined;
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as ApiResponseDto<T>;
+        } catch {
+          // A proxied non-JSON response can still produce a useful HTTP error.
+        }
+      }
 
       if (!response.ok) {
         const errorMsg = data?.message || `Error HTTP ${response.status}: ${response.statusText}`;
         throw new Error(errorMsg);
       }
 
+      // Successful responses without a body (for example 204) are supported.
       return data as ApiResponseDto<T>;
     } catch (error: any) {
       console.error(`[API ERROR] ${options.method || "GET"} ${url}:`, error.message);
