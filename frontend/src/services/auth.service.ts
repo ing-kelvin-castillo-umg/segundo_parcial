@@ -7,6 +7,8 @@ import { ApiClient } from "./api.client";
 // Los tokens viven en cookies httpOnly del BFF y nunca se escriben en localStorage.
 const USER_STORAGE_KEY = "user";
 
+export type LogoutReason = "manual" | "inactivity";
+
 export class AuthService {
   static async login(credentials: { username: string; password: string }): Promise<AuthSession> {
     const dto = AuthMapper.toLoginDto(credentials);
@@ -26,9 +28,10 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static async logout(): Promise<void> {
+  // El BFF reenvía el refresh token (cookie) al backend, que lo revoca, y luego elimina las cookies.
+  static async logout(reason: LogoutReason = "manual"): Promise<void> {
     try {
-      await ApiClient.post<null>("/api/auth/logout", {});
+      await ApiClient.post<null>("/api/auth/logout", { reason });
     } finally {
       this.clearLocalSession();
     }

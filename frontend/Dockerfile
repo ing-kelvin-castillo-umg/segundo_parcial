@@ -18,6 +18,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # La URL del backend NO se inyecta en el build: el BFF la lee en tiempo de ejecución
 # desde BACKEND_URL (variable solo de servidor definida en docker-compose.yml).
 
+# Política de inactividad (no es información sensible, se incrusta en el bundle del cliente)
+ARG NEXT_PUBLIC_IDLE_TIMEOUT_MS=120000
+ARG NEXT_PUBLIC_IDLE_WARNING_MS=30000
+ENV NEXT_PUBLIC_IDLE_TIMEOUT_MS=${NEXT_PUBLIC_IDLE_TIMEOUT_MS}
+ENV NEXT_PUBLIC_IDLE_WARNING_MS=${NEXT_PUBLIC_IDLE_WARNING_MS}
+
 RUN npm run build
 
 # Stage 3: Runner

@@ -4,6 +4,8 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import { IdleWarningModal } from "@/components/IdleWarningModal";
+import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -11,8 +13,14 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, loading, sessionEndReason } = useAuth();
+  const { isAuthenticated, loading, sessionEndReason, logout } = useAuth();
   const router = useRouter();
+
+  // Cierre de sesión por inactividad: solo activo mientras hay una sesión en el área privada.
+  const { remainingMs, stayActive } = useIdleTimer({
+    enabled: isAuthenticated,
+    onIdle: () => logout("inactivity"),
+  });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -42,6 +50,15 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {children}
       </div>
+
+      {/* Advertencia previa al cierre por inactividad */}
+      {remainingMs !== null && (
+        <IdleWarningModal
+          remainingMs={remainingMs}
+          onStayActive={stayActive}
+          onLogoutNow={() => logout("inactivity")}
+        />
+      )}
     </div>
   );
 }

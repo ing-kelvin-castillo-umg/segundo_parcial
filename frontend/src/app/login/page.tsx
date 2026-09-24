@@ -30,6 +30,7 @@ export default function LoginPage() {
     const reason = new URLSearchParams(window.location.search).get("reason");
     const messages: Record<string, string> = {
       expired: "Tu sesión expiró. Inicia sesión nuevamente.",
+      inactivity: "Sesión cerrada por inactividad",
     };
     if (reason && messages[reason]) setNotice(messages[reason]);
   }, []);

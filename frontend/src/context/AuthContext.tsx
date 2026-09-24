@@ -2,12 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@/entities/user.entity";
-import { AuthService } from "@/services/auth.service";
+import { AuthService, LogoutReason } from "@/services/auth.service";
 import { SESSION_EXPIRED_EVENT } from "@/services/api.client";
 import { useRouter } from "next/navigation";
 
 // Motivo por el que terminó la sesión; el layout privado lo pasa a /login?reason=...
-export type SessionEndReason = "expired";
+export type SessionEndReason = "expired" | "inactivity";
 
 interface AuthContextType {
   user: User | null;
@@ -16,7 +16,7 @@ interface AuthContextType {
   loading: boolean;
   sessionEndReason: SessionEndReason | null;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (reason?: LogoutReason) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,11 +64,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(session.user);
   };
 
-  const logout = async () => {
+  const logout = async (reason?: LogoutReason) => {
+    const isInactivity = reason === "inactivity";
+    if (isInactivity) {
+      console.log("[IDLE] 📡 Notificando al backend → POST /api/auth/logout (motivo: inactividad)");
+    }
     try {
-      await AuthService.logout();
+      await AuthService.logout(isInactivity ? "inactivity" : "manual");
+      if (isInactivity) {
+        console.log("[IDLE] ✅ Sesión invalidada en el servidor (refresh token revocado) y cookies eliminadas");
+      }
     } catch {
       // Aunque el BFF no responda, la sesión local se limpia igualmente.
+    }
+    if (isInactivity) {
+      setSessionEndReason("inactivity");
+      setUser(null);
+      console.log("[IDLE] ↪️ Redirigiendo a /login?reason=inactivity");
+      router.push("/login?reason=inactivity");
+      return;
     }
     setUser(null);
     router.push("/");

@@ -90,6 +90,21 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
+    @Transactional
+    public User revoke(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) {
+            return null;
+        }
+        return refreshTokenRepository.findByTokenHash(hash(rawToken))
+                .map(stored -> {
+                    stored.setRevoked(true);
+                    log.info("[REFRESH] Refresh token revocado por logout para '{}'", stored.getUser().getUsername());
+                    return stored.getUser();
+                })
+                .orElse(null);
+    }
+
+    @Override
     public long getRefreshExpirationMs() {
         return refreshExpirationMs;
     }

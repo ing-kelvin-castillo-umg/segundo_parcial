@@ -1,6 +1,7 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
@@ -12,6 +13,8 @@ import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.JwtTokenProvider;
 import com.umg.examen.service.AuthService;
 import com.umg.examen.service.RefreshTokenService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
@@ -76,6 +81,19 @@ public class AuthServiceImpl implements AuthService {
         String newRefreshToken = refreshTokenService.createRefreshToken(user);
 
         return userMapper.toAuthResponse(user, newAccessToken, newRefreshToken, tokenProvider.getJwtExpirationMs());
+    }
+
+    @Override
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String reason = request.getReason() != null ? request.getReason() : "manual";
+        User user = refreshTokenService.revoke(request.getRefreshToken());
+        if (user != null) {
+            log.info("[LOGOUT] Sesión de '{}' cerrada (motivo: {}) — refresh token revocado en el servidor",
+                    user.getUsername(), reason);
+        } else {
+            log.info("[LOGOUT] Logout recibido (motivo: {}) sin refresh token activo", reason);
+        }
     }
 
     @Override

@@ -20,5 +20,12 @@ public interface RefreshTokenService {
      */
     User verifyAndConsume(String rawToken);
 
+    /**
+     * Revoca el refresh token (logout). Es idempotente: un token desconocido o ya revocado no produce error.
+     *
+     * @return el usuario dueño del token, o null si el token no existía
+     */
+    User revoke(String rawToken);
+
     long getRefreshExpirationMs();
 }
