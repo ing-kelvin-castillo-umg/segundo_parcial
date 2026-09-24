@@ -3,9 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 12, 50, 48;
+  --background-start-rgb: 240, 250, 248;
+  --background-end-rgb: 255, 253, 247;
+}
+
+::selection {
+  color: #062c2c;
+  background: #a9e7d8;
+}
+
+:focus-visible {
+  outline: 3px solid #39b9a6;
+  outline-offset: 3px;
 }
 
 body {
@@ -27,14 +37,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #e4f3ef;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #72d4c1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #1b9788;
 }
