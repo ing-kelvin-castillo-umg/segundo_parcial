@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
+import InactivityWatcher from "@/components/InactivityWatcher";
+
 export const metadata: Metadata = {
   title: "Examen Parcial - Sistema de Productos UMG",
   description: "Plataforma de catálogo y gestión de productos con Next.js y Spring Boot",
@@ -16,7 +18,9 @@ export default function RootLayout({
     <html lang="es">
       <body className="antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900">
         <AuthProvider>
-          {children}
+          <InactivityWatcher>
+            {children}
+          </InactivityWatcher>
         </AuthProvider>
       </body>
     </html>

@@ -23,11 +23,19 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+      try {
+        console.warn("⚠️ Cerrando sesión y notificando al backend...");
+        await ApiClient.post("/api/auth/logout", {});
+        console.log("✅ Sesión cerrada en el backend.");
+      } catch (err) {
+        console.error("No se pudo notificar al backend el cierre de sesión", err);
+      } finally {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+      }
     }
   }
 

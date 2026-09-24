@@ -42,6 +42,18 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Cerrar sesión", description = "Invalida la sesión actual en el frontend y registra el evento en el backend.")
+    public ResponseEntity<ApiResponse<String>> logout(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            System.out.println("Usuario cerró sesión: " + authentication.getName());
+        } else {
+            System.out.println("Cierre de sesión anónimo / inactividad.");
+        }
+        return ResponseEntity.ok(ApiResponse.success("Sesión cerrada exitosamente en el backend", null));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")
