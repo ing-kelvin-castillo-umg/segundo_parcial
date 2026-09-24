@@ -30,7 +30,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(session.token);
     }
     setLoading(false);
-  }, []);
+
+    const handleExpired = () => {
+      setUser(null);
+      setToken(null);
+      router.push("/login?reason=expired");
+    };
+    window.addEventListener("auth:session-expired", handleExpired);
+    return () => window.removeEventListener("auth:session-expired", handleExpired);
+  }, [router]);
 
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });

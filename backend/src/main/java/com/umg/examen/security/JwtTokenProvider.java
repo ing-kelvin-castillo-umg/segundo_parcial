@@ -27,6 +27,9 @@ public class JwtTokenProvider {
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
+    @Value("${app.jwt.refresh-expiration-ms:604800000}")
+    private long refreshExpirationMs;
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -38,25 +41,35 @@ public class JwtTokenProvider {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        return buildToken(userPrincipal.getUsername(), roles, jwtExpirationMs, "access");
+    }
 
-        return Jwts.builder()
-                .subject(userPrincipal.getUsername())
-                .claim("roles", roles)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(getSigningKey())
-                .compact();
+    public String generateRefreshToken(Authentication authentication) {
+        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+        List<String> roles = userPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return buildToken(userPrincipal.getUsername(), roles, refreshExpirationMs, "refresh");
     }
 
     public String generateTokenFromUsername(String username, List<String> roles) {
+        return buildToken(username, roles, jwtExpirationMs, "access");
+    }
+
+    public String generateRefreshTokenFromUsername(String username, List<String> roles) {
+        return buildToken(username, roles, refreshExpirationMs, "refresh");
+    }
+
+    private String buildToken(String username, List<String> roles, long expirationMs, String tokenType) {
+
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        Date expiryDate = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .subject(username)
                 .claim("roles", roles)
+                .claim("tokenType", tokenType)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -89,5 +102,31 @@ public class JwtTokenProvider {
             log.error("La cadena de claims JWT está vacía: {}", e.getMessage());
         }
         return false;
+    }
+
+    public boolean isRefreshToken(String token) {
+        return validateToken(token) && "refresh".equals(getTokenType(token));
+    }
+
+    public String getTokenType(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("tokenType", String.class);
+    }
+
+    public List<String> getRolesFromJwt(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("roles", List.class);
+    }
+
+    public long getAccessExpirationSeconds() {
+        return jwtExpirationMs / 1000;
     }
 }
