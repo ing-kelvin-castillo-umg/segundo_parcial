@@ -15,7 +15,7 @@ El proyecto implementa una arquitectura limpia por capas tanto en el **Backend**
 - **Service & Service Impl**: Principio de inversión de dependencias con interfaces (`AuthService`, `ProductService`) e implementaciones concretas en `service.impl.*` (`AuthServiceImpl`, `ProductServiceImpl`).
 - **Repository**: Patrón Repository mediante interfaces de Spring Data JPA (`UserRepository`, `RoleRepository`, `ProductRepository`).
 - **Entity**: Entidades del modelo relacional mapeadas con JPA (`User`, `Role`, `Product`).
-- **Security & JWT**: Filtro `OncePerRequestFilter`, generador y validador de tokens JWT con algoritmos HMAC-SHA256, y autenticación sin estado (*stateless*).
+- **Security & JWT**: Filtro `OncePerRequestFilter`, token de acceso JWT HMAC-SHA256 de corta duración y refresh tokens aleatorios rotativos almacenados como hash en PostgreSQL.
 - **Liquibase**: Migraciones versionadas en `src/main/resources/db/changelog/` para creación de tablas e inserción de semillas (roles, usuarios, productos).
 
 ### Frontend (Next.js 14 / React 18 / Tailwind CSS / TypeScript)
@@ -25,6 +25,7 @@ El proyecto implementa una arquitectura limpia por capas tanto en el **Backend**
 - **Services (`src/services/`)**: Servicios de red tipados (`AuthService`, `ProductService`, `ApiClient`) con inyección del token JWT en el encabezado `Authorization: Bearer <token>`.
 - **BFF (`src/app/api/[...path]/route.ts`)**: Route Handler de Next.js que recibe las llamadas del navegador en `/api/*` y las reenvía a Spring Boot desde el servidor, conservando método, parámetros, cuerpo, estado y encabezados relevantes.
 - **Context (`src/context/`)**: Estado reactivo global de autenticación (`AuthContext`).
+- **Renovación de sesión**: El contexto programa el refresh antes del vencimiento y `ApiClient` reintenta una solicitud después de un `401`; si el refresh falla, limpia la sesión y vuelve al login.
 - **Components (`src/components/`)**:
   - `Carousel`: Carrusel dinámico de productos en la página principal con auto-avance, navegación por flechas e indicadores.
   - `Navbar` & `Sidebar`: Barras de navegación con control de estado y visualización de roles.
@@ -96,13 +97,16 @@ El navegador siempre llama a `/api/*` en el mismo origen del frontend. Para ejec
 
 Para obtener la evidencia de la Fase 1, abre las herramientas de desarrollo del navegador en la pestaña **Red**, recarga la página y luego inicia sesión. Las solicitudes de productos y autenticación deben aparecer como `http://localhost:3000/api/...`.
 
+Para la Fase 2, Docker Compose configura el access token con una duración de **60 segundos** y el refresh token con **7 días**. Inicia sesión, deja abierta la pestaña **Red** con el filtro **Fetch/XHR** y espera aproximadamente 45 segundos. Aparecerá `POST /api/auth/refresh` con estado `200`, seguido de una sesión que sigue activa. Cada refresh token se puede usar una sola vez; la respuesta entrega otro nuevo. En ejecución local sin Docker, el access token dura 5 minutos por defecto; estos plazos se ajustan con `JWT_EXPIRATION_MS` y `JWT_REFRESH_EXPIRATION_MS` en el servidor Spring Boot.
+
 ---
 
 ## 📡 Resumen de Endpoints de la API REST
 
 | Método | Endpoint | Descripción | Acceso |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Iniciar sesión y obtener token JWT | Público |
+| `POST` | `/api/auth/login` | Iniciar sesión y obtener access y refresh tokens | Público |
+| `POST` | `/api/auth/refresh` | Rotar el refresh token y renovar el access token | Público, con refresh token válido |
 | `GET` | `/api/auth/me` | Obtener perfil del usuario en sesión | Autenticado |
 | `GET` | `/api/products` | Listar productos (con soporte `?query=`) | Público / Carrusel |
 | `GET` | `/api/products/{id}` | Obtener detalle de un producto por ID | Público / Autenticado |
@@ -128,7 +132,7 @@ app_segundo_parcial/
 │       │   │   ├── dto/
 │       │   │   │   ├── request/ (LoginRequest, ProductRequest)
 │       │   │   │   └── response/ (ApiResponse, AuthResponse, ProductResponse, UserResponse)
-│       │   │   ├── entity/ (Product, Role, User)
+│       │   │   ├── entity/ (Product, RefreshToken, Role, User)
 │       │   │   ├── mapper/ (ProductMapper, UserMapper)
 │       │   │   ├── repository/ (ProductRepository, RoleRepository, UserRepository)
 │       │   │   ├── security/ (CustomUserDetailsService, JwtAuthenticationEntryPoint, JwtAuthenticationFilter, JwtTokenProvider)
@@ -144,7 +148,8 @@ app_segundo_parcial/
 │       │           ├── 002-insert-roles-users.xml
 │       │           ├── 003-create-products.xml
 │       │           ├── 004-insert-initial-products.xml
-│       │           └── 005-sync-products-sequence.xml
+│       │           ├── 005-sync-products-sequence.xml
+│       │           └── 006-create-refresh-tokens.xml
 │       └── test/java/com/umg/examen/PasswordEncoderTest.java
 ├── frontend/
 │   ├── Dockerfile

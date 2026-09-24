@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
+import { ApiClient } from "@/services/api.client";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -30,7 +31,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(session.token);
     }
     setLoading(false);
+
+    const onTokenRefreshed = (event: Event) => {
+      setToken((event as CustomEvent<string>).detail);
+    };
+    window.addEventListener("auth:token-refreshed", onTokenRefreshed);
+    return () => window.removeEventListener("auth:token-refreshed", onTokenRefreshed);
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    const expiresAt = Number(localStorage.getItem("accessTokenExpiresAt"));
+    if (!expiresAt) return;
+
+    // Refresh shortly before expiry; the API client also handles a missed timer via 401.
+    const delay = Math.max(0, expiresAt - Date.now() - 15_000);
+    const timeout = window.setTimeout(() => {
+      void ApiClient.refreshAccessToken().catch(() => {
+        // The API client redirects to login when renewal is no longer possible.
+      });
+    }, delay);
+    return () => window.clearTimeout(timeout);
+  }, [token]);
 
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
