@@ -1,6 +1,7 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.entity.User;
@@ -43,11 +44,32 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = tokenProvider.generateToken(authentication);
+        String refreshToken = tokenProvider.generateRefreshToken(request.getUsername());
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + request.getUsername()));
 
-        return userMapper.toAuthResponse(user, token);
+        return userMapper.toAuthResponse(user, token, refreshToken);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        if (!tokenProvider.validateRefreshToken(request.getRefreshToken())) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Refresh token inválido o expirado");
+        }
+
+        String username = tokenProvider.getUsernameFromRefreshToken(request.getRefreshToken());
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+
+        java.util.List<String> roles = user.getRoles().stream()
+                .map(com.umg.examen.entity.Role::getName)
+                .toList();
+
+        String token = tokenProvider.generateTokenFromUsername(username, roles);
+        String refreshToken = tokenProvider.generateRefreshToken(username);
+        return userMapper.toAuthResponse(user, token, refreshToken);
     }
 
     @Override

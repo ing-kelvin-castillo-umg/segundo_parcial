@@ -32,6 +32,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const syncSession = () => {
+      const session = AuthService.getStoredSession();
+      setUser(session?.user || null);
+      setToken(session?.token || null);
+    };
+
+    const handleExpiredSession = () => {
+      setUser(null);
+      setToken(null);
+      router.push("/login");
+    };
+
+    window.addEventListener("auth-session-refreshed", syncSession);
+    window.addEventListener("auth-session-expired", handleExpiredSession);
+
+    return () => {
+      window.removeEventListener("auth-session-refreshed", syncSession);
+      window.removeEventListener("auth-session-expired", handleExpiredSession);
+    };
+  }, [router]);
+
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
     setUser(session.user);

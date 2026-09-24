@@ -20,12 +20,18 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
+    private static final String TOKEN_USE_CLAIM = "token_use";
+    private static final String ACCESS_TOKEN_USE = "access";
+    private static final String REFRESH_TOKEN_USE = "refresh";
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
+
+    @Value("${app.jwt.refresh-expiration-ms:604800000}")
+    private long refreshExpirationMs;
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
@@ -38,16 +44,7 @@ public class JwtTokenProvider {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-
-        return Jwts.builder()
-                .subject(userPrincipal.getUsername())
-                .claim("roles", roles)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(getSigningKey())
-                .compact();
+        return generateTokenFromUsername(userPrincipal.getUsername(), roles);
     }
 
     public String generateTokenFromUsername(String username, List<String> roles) {
@@ -57,6 +54,20 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(username)
                 .claim("roles", roles)
+                .claim(TOKEN_USE_CLAIM, ACCESS_TOKEN_USE)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
+
+        return Jwts.builder()
+                .subject(username)
+                .claim(TOKEN_USE_CLAIM, REFRESH_TOKEN_USE)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -64,30 +75,50 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromJwt(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+        return parseClaims(token).getSubject();
+    }
+
+    public String getUsernameFromRefreshToken(String refreshToken) {
+        return parseClaims(refreshToken).getSubject();
     }
 
     public boolean validateToken(String authToken) {
         try {
-            Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(authToken);
-            return true;
+            Claims claims = parseClaims(authToken);
+            return ACCESS_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
         } catch (SecurityException | MalformedJwtException e) {
-            log.error("Firma JWT inválida: {}", e.getMessage());
+            log.error("Firma JWT invalida: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
             log.error("Token JWT expirado: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
             log.error("Token JWT no soportado: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.error("La cadena de claims JWT está vacía: {}", e.getMessage());
+            log.error("La cadena de claims JWT esta vacia: {}", e.getMessage());
         }
         return false;
+    }
+
+    public boolean validateRefreshToken(String refreshToken) {
+        try {
+            Claims claims = parseClaims(refreshToken);
+            return REFRESH_TOKEN_USE.equals(claims.get(TOKEN_USE_CLAIM, String.class));
+        } catch (SecurityException | MalformedJwtException e) {
+            log.error("Firma JWT de refresh invalida: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.error("Refresh token expirado: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.error("Refresh token no soportado: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("La cadena de claims del refresh token esta vacia: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
