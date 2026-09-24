@@ -1,7 +1,5 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 export class ApiClient {
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
@@ -11,7 +9,8 @@ export class ApiClient {
   }
 
   static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
-    const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    // El navegador solo llama al BFF de Next.js en su mismo origen.
+    const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const token = this.getToken();
 
     const headers: Record<string, string> = {
