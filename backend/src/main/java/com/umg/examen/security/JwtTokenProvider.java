@@ -15,6 +15,9 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -29,6 +32,8 @@ public class JwtTokenProvider {
 
     @Value("${app.jwt.refresh-expiration-ms:604800000}")
     private long refreshExpirationMs;
+
+    private final Set<String> revokedTokenIds = ConcurrentHashMap.newKeySet();
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
@@ -47,6 +52,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())
                 .claim("roles", roles)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -60,6 +66,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(username)
                 .claim("roles", roles)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -72,6 +79,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(username)
                 .claim("tokenType", "refresh")
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -80,8 +88,8 @@ public class JwtTokenProvider {
 
     public boolean validateRefreshToken(String token) {
         try {
-            return "refresh".equals(Jwts.parser().verifyWith(getSigningKey()).build()
-                    .parseSignedClaims(token).getPayload().get("tokenType", String.class));
+            Claims claims = Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
+            return "refresh".equals(claims.get("tokenType", String.class)) && !isRevoked(claims);
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
@@ -102,7 +110,7 @@ public class JwtTokenProvider {
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(authToken).getPayload();
-            return !"refresh".equals(claims.get("tokenType", String.class));
+            return !"refresh".equals(claims.get("tokenType", String.class)) && !isRevoked(claims);
         } catch (SecurityException | MalformedJwtException e) {
             log.error("Firma JWT inválida: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
@@ -113,5 +121,19 @@ public class JwtTokenProvider {
             log.error("La cadena de claims JWT está vacía: {}", e.getMessage());
         }
         return false;
+    }
+
+    public void revokeToken(String token) {
+        if (token == null || token.isBlank()) return;
+        try {
+            Claims claims = Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
+            if (claims.getId() != null) revokedTokenIds.add(claims.getId());
+        } catch (JwtException | IllegalArgumentException ignored) {
+            // An expired token is already unusable; invalid tokens are never trusted for revocation.
+        }
+    }
+
+    private boolean isRevoked(Claims claims) {
+        return claims.getId() != null && revokedTokenIds.contains(claims.getId());
     }
 }

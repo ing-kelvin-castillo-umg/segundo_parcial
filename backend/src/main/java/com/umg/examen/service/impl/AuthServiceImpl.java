@@ -72,6 +72,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void logout(String accessToken, String refreshToken) {
+        tokenProvider.revokeToken(accessToken);
+        tokenProvider.revokeToken(refreshToken);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser(String username) {
         User user = userRepository.findByUsername(username)

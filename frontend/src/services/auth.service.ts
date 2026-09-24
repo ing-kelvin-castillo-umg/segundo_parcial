@@ -25,6 +25,19 @@ export class AuthService {
 
   static logout(): void {
     if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (token || refreshToken) {
+        void fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ refreshToken }),
+          keepalive: true,
+        }).catch((error) => console.error("No se pudo notificar el cierre al servidor:", error));
+      }
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
