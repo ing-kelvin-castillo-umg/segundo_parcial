@@ -7,6 +7,7 @@ import com.umg.examen.entity.User;
 import com.umg.examen.mapper.UserMapper;
 import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.JwtTokenProvider;
+import com.umg.examen.security.TokenRevocationService;
 import com.umg.examen.service.AuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -22,19 +25,24 @@ import java.util.List;
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final TokenRevocationService tokenRevocationService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtTokenProvider tokenProvider,
                            UserRepository userRepository,
-                           UserMapper userMapper) {
+                           UserMapper userMapper,
+                           TokenRevocationService tokenRevocationService) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     @Override
@@ -61,6 +69,11 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Refresh token inválido o expirado");
         }
 
+        String tokenId = tokenProvider.getTokenId(refreshToken);
+        if (tokenId == null || tokenRevocationService.isRevoked(tokenId)) {
+            throw new BadCredentialsException("Refresh token revocado");
+        }
+
         String username = tokenProvider.getUsernameFromJwt(refreshToken);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BadCredentialsException("Usuario del refresh token no encontrado"));
@@ -70,6 +83,19 @@ public class AuthServiceImpl implements AuthService {
                 .toList();
         String accessToken = tokenProvider.generateAccessTokenFromUsername(username, roles);
         return userMapper.toAuthResponse(user, accessToken);
+    }
+
+    @Override
+    public void logout(String refreshToken, String reason) {
+        String username = "desconocido";
+        if (refreshToken != null && !refreshToken.isBlank() && tokenProvider.validateRefreshToken(refreshToken)) {
+            String tokenId = tokenProvider.getTokenId(refreshToken);
+            username = tokenProvider.getUsernameFromJwt(refreshToken);
+            if (tokenId != null) {
+                tokenRevocationService.revoke(tokenId, tokenProvider.getExpiration(refreshToken).toInstant());
+            }
+        }
+        log.info("Cierre de sesión: usuario={}, motivo={}", username, reason);
     }
 
     @Override

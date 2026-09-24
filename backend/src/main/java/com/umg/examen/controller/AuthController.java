@@ -16,6 +16,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Autenticación", description = "Endpoints para inicio de sesión y gestión de sesión de usuario")
@@ -51,6 +53,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Token de acceso renovado", authResponse));
     }
 
+    @PostMapping("/logout")
+    @Operation(summary = "Cerrar sesión", description = "Revoca el refresh token actual y elimina su cookie")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            @RequestBody(required = false) Map<String, String> request) {
+        String requestedReason = request != null ? request.get("reason") : null;
+        String reason = "INACTIVITY".equalsIgnoreCase(requestedReason) ? "INACTIVITY" : "MANUAL";
+        authService.logout(refreshToken, reason);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, createExpiredRefreshCookie().toString())
+                .body(ApiResponse.success("Sesión cerrada correctamente", null));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")
@@ -69,6 +85,16 @@ public class AuthController {
                 .sameSite("Lax")
                 .path("/api/auth")
                 .maxAge(tokenProvider.getRefreshExpirationMs() / 1000)
+                .build();
+    }
+
+    private ResponseCookie createExpiredRefreshCookie() {
+        return ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/api/auth")
+                .maxAge(0)
                 .build();
     }
 }

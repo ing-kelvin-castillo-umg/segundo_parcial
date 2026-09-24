@@ -9,5 +9,6 @@ public interface AuthService {
 
     LoginResult login(LoginRequest request);
     AuthResponse refreshAccessToken(String refreshToken);
+    void logout(String refreshToken, String reason);
     UserResponse getCurrentUser(String username);
 }

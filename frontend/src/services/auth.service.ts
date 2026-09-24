@@ -22,10 +22,16 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+  static async logout(reason: "MANUAL" | "INACTIVITY" = "MANUAL"): Promise<void> {
+    try {
+      await ApiClient.post<void>("/api/auth/logout", { reason });
+    } catch (error) {
+      console.error("No fue posible completar el logout en el backend:", error);
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
   }
 

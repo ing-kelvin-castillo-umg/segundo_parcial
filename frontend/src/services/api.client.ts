@@ -69,7 +69,9 @@ export class ApiClient {
         credentials: "same-origin",
       });
 
-      const isAuthRequest = url === "/api/auth/login" || url === "/api/auth/refresh";
+      const isAuthRequest = url === "/api/auth/login"
+        || url === "/api/auth/refresh"
+        || url === "/api/auth/logout";
       if (response.status === 401 && allowRefresh && !isAuthRequest) {
         try {
           await this.refreshAccessToken();
