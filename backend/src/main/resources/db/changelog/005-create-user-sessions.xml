@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="005-1-create-user-sessions-table" author="umg">
+        <createTable tableName="user_sessions">
+            <column name="session_id" type="VARCHAR(36)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_sessions"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_user_sessions_user" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="refresh_token_hash" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_user_sessions_refresh_hash" tableName="user_sessions">
+            <column name="refresh_token_hash"/>
+        </createIndex>
+        <createIndex indexName="idx_user_sessions_user_id" tableName="user_sessions">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

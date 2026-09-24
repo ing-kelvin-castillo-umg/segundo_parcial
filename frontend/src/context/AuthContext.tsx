@@ -40,6 +40,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener("auth:session-expired", handleExpired);
   }, [router]);
 
+  useEffect(() => {
+    if (!token) return;
+
+    let timeoutId: number;
+    const resetInactivityTimer = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(async () => {
+        await AuthService.logout();
+        setUser(null);
+        setToken(null);
+        router.push("/login?reason=inactivity");
+      }, 3 * 60 * 1000);
+    };
+    const activityEvents = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    activityEvents.forEach((event) => window.addEventListener(event, resetInactivityTimer));
+    resetInactivityTimer();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      activityEvents.forEach((event) => window.removeEventListener(event, resetInactivityTimer));
+    };
+  }, [router, token]);
+
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
     setUser(session.user);
@@ -47,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    AuthService.logout();
+    void AuthService.logout();
     setUser(null);
     setToken(null);
     router.push("/");

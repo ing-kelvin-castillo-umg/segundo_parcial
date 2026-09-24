@@ -23,8 +23,16 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
     if (typeof window !== "undefined") {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        try {
+          await ApiClient.post<void>("/api/auth/logout", { refreshToken });
+        } catch {
+          // The local session must still be cleared if the backend is unavailable.
+        }
+      }
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
