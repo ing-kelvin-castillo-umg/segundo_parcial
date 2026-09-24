@@ -31,17 +31,28 @@ public class UserMapper {
         return response;
     }
 
-    public AuthResponse toAuthResponse(User user, String token) {
+    public List<String> toRoleNames(User user) {
+        return user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+    }
+
+    public AuthResponse toAuthResponse(User user,
+                                       String accessToken,
+                                       long accessExpiresInSeconds,
+                                       String refreshToken,
+                                       long refreshExpiresInSeconds) {
         if (user == null) {
             return null;
         }
-        List<String> roles = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toList());
+        List<String> roles = toRoleNames(user);
 
         AuthResponse response = new AuthResponse();
-        response.setToken(token);
-        response.setType("Bearer");
+        response.setAccessToken(accessToken);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(accessExpiresInSeconds);
+        response.setRefreshToken(refreshToken);
+        response.setRefreshExpiresIn(refreshExpiresInSeconds);
         response.setUsername(user.getUsername());
         response.setFullName(user.getFullName());
         response.setEmail(user.getEmail());

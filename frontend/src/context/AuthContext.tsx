@@ -30,6 +30,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(session.token);
     }
     setLoading(false);
+
+    // El interceptor de ApiClient renueva el token en segundo plano; aquí se refleja en el estado.
+    return AuthService.subscribe((updated) => {
+      setUser(updated?.user ?? null);
+      setToken(updated?.token ?? null);
+    });
   }, []);
 
   const login = async (username: string, password: string) => {

@@ -4,14 +4,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-@Schema(description = "Respuesta de autenticación con Token JWT")
+@Schema(description = "Respuesta de autenticación con access token JWT y refresh token")
 public class AuthResponse {
 
-    @Schema(description = "Token de acceso JWT")
-    private String token;
+    @Schema(description = "Access token JWT de corta duración")
+    private String accessToken;
+
+    @Schema(description = "Refresh token opaco; se rota en cada uso de /api/auth/refresh")
+    private String refreshToken;
 
     @Schema(description = "Tipo de token", example = "Bearer")
-    private String type = "Bearer";
+    private String tokenType = "Bearer";
+
+    @Schema(description = "Segundos de vida restantes del access token", example = "60")
+    private long expiresIn;
+
+    @Schema(description = "Segundos de vida restantes del refresh token", example = "86400")
+    private long refreshExpiresIn;
 
     @Schema(description = "Nombre de usuario", example = "admin")
     private String username;
@@ -27,29 +36,44 @@ public class AuthResponse {
 
     public AuthResponse() {}
 
-    public AuthResponse(String token, String type, String username, String fullName, String email, List<String> roles) {
-        this.token = token;
-        this.type = type != null ? type : "Bearer";
-        this.username = username;
-        this.fullName = fullName;
-        this.email = email;
-        this.roles = roles;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public String getToken() {
-        return token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
-    public String getType() {
-        return type;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+
+    public long getExpiresIn() {
+        return expiresIn;
+    }
+
+    public void setExpiresIn(long expiresIn) {
+        this.expiresIn = expiresIn;
+    }
+
+    public long getRefreshExpiresIn() {
+        return refreshExpiresIn;
+    }
+
+    public void setRefreshExpiresIn(long refreshExpiresIn) {
+        this.refreshExpiresIn = refreshExpiresIn;
     }
 
     public String getUsername() {

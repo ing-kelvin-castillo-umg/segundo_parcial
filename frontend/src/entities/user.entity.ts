@@ -11,6 +11,8 @@ export interface User {
 
 export interface AuthSession {
   token: string;
+  /** Momento (epoch en ms) en que expira el access token. */
+  expiresAt: number;
   user: User;
   isAuthenticated: boolean;
   isAdmin: boolean;

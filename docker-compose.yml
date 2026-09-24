@@ -35,7 +35,9 @@ services:
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      JWT_EXPIRATION_MS: 86400000
+      # Access token corto (20 s) para demostrar el refresh; refresh token de 24 h
+      JWT_ACCESS_EXPIRATION_MS: 20000
+      JWT_REFRESH_EXPIRATION_MS: 86400000
     ports:
       - "8080:8080"
     depends_on:

@@ -3,9 +3,15 @@ export interface LoginRequestDto {
   password: string;
 }
 
+/**
+ * Respuesta de /api/auth/login y /api/auth/refresh tal como la entrega el BFF.
+ * El refreshToken nunca llega al navegador: el BFF lo guarda en una cookie httpOnly.
+ */
 export interface AuthResponseDto {
-  token: string;
-  type: string;
+  accessToken: string;
+  tokenType: string;
+  /** Segundos de vida del access token. */
+  expiresIn: number;
   username: string;
   fullName: string;
   email: string;

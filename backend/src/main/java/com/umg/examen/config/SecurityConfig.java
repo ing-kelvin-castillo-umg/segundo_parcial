@@ -74,8 +74,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**"
                         ).permitAll()
-                        // Rutas públicas de Autenticación
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Rutas públicas de Autenticación. /api/auth/me queda protegida para que un
+                        // access token expirado responda 401 vía JwtAuthenticationEntryPoint.
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh").permitAll()
                         // Lectura de productos abierta para carrusel y catálogo público
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         // Creación, edición y eliminación restringida a ROLE_ADMIN

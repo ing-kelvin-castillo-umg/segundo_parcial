@@ -2,6 +2,7 @@ import { AuthResponseDto, UserResponseDto } from "@/dtos/auth.dto";
 import { AuthSession, User } from "@/entities/user.entity";
 import { AuthMapper } from "@/mappers/auth.mapper";
 import { ApiClient } from "./api.client";
+import { SessionStore } from "./session.store";
 
 export class AuthService {
   static async login(credentials: { username: string; password: string }): Promise<AuthSession> {
@@ -9,12 +10,15 @@ export class AuthService {
     const response = await ApiClient.post<AuthResponseDto>("/api/auth/login", dto);
     const session = AuthMapper.toSession(response.data);
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("token", session.token);
-      localStorage.setItem("user", JSON.stringify(session.user));
-    }
+    SessionStore.save(session);
+    console.info(`[Auth] Sesión iniciada, access token expira en ${response.data.expiresIn}s`);
 
     return session;
+  }
+
+  /** Renueva el access token con el refresh token de la cookie httpOnly (single-flight). */
+  static refresh(): Promise<AuthSession> {
+    return ApiClient.refreshSession();
   }
 
   static async getCurrentUser(): Promise<User> {
@@ -23,30 +27,14 @@ export class AuthService {
   }
 
   static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    }
+    SessionStore.clear();
   }
 
   static getStoredSession(): AuthSession | null {
-    if (typeof window === "undefined") return null;
+    return SessionStore.getSession();
+  }
 
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-
-    if (!token || !userStr) return null;
-
-    try {
-      const user = JSON.parse(userStr) as User;
-      return {
-        token,
-        user,
-        isAuthenticated: true,
-        isAdmin: user.roles?.includes("ROLE_ADMIN") || false,
-      };
-    } catch {
-      return null;
-    }
+  static subscribe(listener: (session: AuthSession | null) => void): () => void {
+    return SessionStore.subscribe(listener);
   }
 }

@@ -35,8 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
+            JwtTokenProvider.TokenStatus status = StringUtils.hasText(jwt)
+                    ? tokenProvider.getTokenStatus(jwt)
+                    : null;
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+            if (status == JwtTokenProvider.TokenStatus.EXPIRED || status == JwtTokenProvider.TokenStatus.INVALID) {
+                // El entry point usa este atributo para responder 401 con un mensaje específico.
+                request.setAttribute(JwtAuthenticationEntryPoint.TOKEN_STATUS_ATTRIBUTE, status);
+            } else if (status == JwtTokenProvider.TokenStatus.VALID) {
                 String username = tokenProvider.getUsernameFromJwt(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);

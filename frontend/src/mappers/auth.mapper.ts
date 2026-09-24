@@ -13,9 +13,10 @@ export class AuthMapper {
     };
 
     return {
-      token: dto.token,
+      token: dto.accessToken,
+      expiresAt: Date.now() + (dto.expiresIn || 0) * 1000,
       user: user,
-      isAuthenticated: !!dto.token,
+      isAuthenticated: !!dto.accessToken,
       isAdmin: roles.includes("ROLE_ADMIN"),
     };
   }
