@@ -17,6 +17,7 @@ import {
   RefreshCw,
   CheckCircle,
   AlertTriangle,
+  Tags,
 } from "lucide-react";
 
 export default function ProductsPage() {
@@ -36,6 +37,8 @@ export default function ProductsPage() {
 
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const inventoryUnits = products.reduce((total, product) => total + (product.stock || 0), 0);
+  const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });
@@ -125,32 +128,32 @@ export default function ProductsPage() {
       )}
 
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-5 sm:px-6 shadow-sm">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
-            <span>Módulo de Inventario</span>
+          <div className="flex items-center gap-2 text-blue-700 text-xs font-bold uppercase tracking-[0.16em] mb-2">
+            <Boxes className="w-4 h-4" />
+            <span>Panel de control · Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-950 tracking-tight">
             Gestión de Productos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Consulta, busca y gestiona el inventario de productos en tiempo real.
+          <p className="text-sm text-slate-600 mt-1">
+            Consulta, busca y gestiona el inventario desde un solo lugar.
           </p>
         </div>
 
         {/* User Role Badge & Refresh */}
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-start sm:self-auto">
           <button
             onClick={loadProducts}
             disabled={loading}
             title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors shadow-sm disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
             {isAdmin ? (
               <ShieldCheck className="w-4 h-4 text-indigo-600" />
             ) : (
@@ -169,6 +172,33 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      <section aria-label="Resumen del inventario" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-slate-200 border-t-2 border-t-blue-600 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-600">Productos registrados</span>
+            <span className="rounded-xl bg-blue-50 p-2.5 text-blue-700"><Boxes className="h-5 w-5" /></span>
+          </div>
+          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{loading ? "—" : products.length}</p>
+          <p className="mt-1 text-xs text-slate-500">Elementos en el catálogo</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 border-t-2 border-t-emerald-600 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-600">Unidades disponibles</span>
+            <span className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700"><CheckCircle className="h-5 w-5" /></span>
+          </div>
+          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{loading ? "—" : inventoryUnits}</p>
+          <p className="mt-1 text-xs text-slate-500">Suma de existencias registradas</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 border-t-2 border-t-amber-600 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-600">Categorías</span>
+            <span className="rounded-xl bg-amber-50 p-2.5 text-amber-700"><Tags className="h-5 w-5" /></span>
+          </div>
+          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{loading ? "—" : categoryCount}</p>
+          <p className="mt-1 text-xs text-slate-500">Tipos de producto en el catálogo</p>
+        </div>
+      </section>
 
       {/* Main DataTable */}
       <DataTable
