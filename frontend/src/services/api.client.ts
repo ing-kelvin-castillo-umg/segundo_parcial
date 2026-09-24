@@ -97,6 +97,28 @@ export class ApiClient {
     return data.data;
   }
 
+  static async logoutSession(): Promise<void> {
+    const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+    const token = this.getToken();
+
+    if (!refreshToken) return;
+
+    const response = await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+    const data = await this.parseResponse<null>(response);
+
+    if (!response.ok) {
+      throw new Error(data?.message || "No fue posible cerrar la sesión en el servidor.");
+    }
+  }
+
   static persistAuthResponse(auth: AuthResponseDto): void {
     if (typeof window === "undefined") return;
 

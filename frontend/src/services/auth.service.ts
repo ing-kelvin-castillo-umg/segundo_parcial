@@ -25,8 +25,15 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    ApiClient.clearStoredSession();
+  static async logout(): Promise<void> {
+    try {
+      await ApiClient.logoutSession();
+    } catch (error) {
+      // The local session must still be cleared even if the network is unavailable.
+      console.warn("No fue posible notificar el cierre de sesión al servidor.", error);
+    } finally {
+      ApiClient.clearStoredSession();
+    }
   }
 
   static getStoredSession(): AuthSession | null {

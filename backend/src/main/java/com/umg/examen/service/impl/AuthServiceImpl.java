@@ -1,13 +1,16 @@
 package com.umg.examen.service.impl;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.entity.RefreshToken;
+import com.umg.examen.entity.RevokedAccessToken;
 import com.umg.examen.entity.User;
 import com.umg.examen.mapper.UserMapper;
 import com.umg.examen.repository.RefreshTokenRepository;
+import com.umg.examen.repository.RevokedAccessTokenRepository;
 import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.JwtTokenProvider;
 import com.umg.examen.service.AuthService;
@@ -27,6 +30,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
 
@@ -37,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RevokedAccessTokenRepository revokedAccessTokenRepository;
     private final UserMapper userMapper;
 
     @Value("${app.jwt.refresh-expiration-ms}")
@@ -48,11 +53,13 @@ public class AuthServiceImpl implements AuthService {
                            JwtTokenProvider tokenProvider,
                            UserRepository userRepository,
                            RefreshTokenRepository refreshTokenRepository,
+                           RevokedAccessTokenRepository revokedAccessTokenRepository,
                            UserMapper userMapper) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.revokedAccessTokenRepository = revokedAccessTokenRepository;
         this.userMapper = userMapper;
     }
 
@@ -85,6 +92,26 @@ public class AuthServiceImpl implements AuthService {
         // Rotation prevents a refresh token from being reused after it has renewed a session.
         storedToken.setRevoked(true);
         return issueTokens(storedToken.getUser());
+    }
+
+    @Override
+    @Transactional
+    public void logout(LogoutRequest request, String accessToken) {
+        refreshTokenRepository.findByTokenHash(hashToken(request.getRefreshToken()))
+                .ifPresent(token -> token.setRevoked(true));
+
+        if (accessToken != null && tokenProvider.validateToken(accessToken)) {
+            String tokenId = tokenProvider.getTokenId(accessToken);
+            if (!revokedAccessTokenRepository.existsById(tokenId)) {
+                revokedAccessTokenRepository.save(new RevokedAccessToken(
+                        tokenId,
+                        tokenProvider.getUsernameFromJwt(accessToken),
+                        tokenProvider.getExpiration(accessToken).toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                ));
+            }
+        }
     }
 
     @Override

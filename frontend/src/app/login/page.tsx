@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -14,6 +14,19 @@ import {
   Loader2,
   ChevronLeft,
 } from "lucide-react";
+
+function InactivityMessage() {
+  const searchParams = useSearchParams();
+
+  if (searchParams.get("reason") !== "inactive") return null;
+
+  return (
+    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-200 flex items-center gap-2">
+      <AlertCircle className="w-4 h-4 shrink-0" />
+      <span>Sesión cerrada por inactividad.</span>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -111,6 +124,10 @@ export default function LoginPage() {
             <span>{error}</span>
           </div>
         )}
+
+        <Suspense fallback={null}>
+          <InactivityMessage />
+        </Suspense>
 
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-4">
