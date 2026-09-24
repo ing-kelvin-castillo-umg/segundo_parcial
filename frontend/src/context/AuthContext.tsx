@@ -32,6 +32,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const handleTokenRefreshed = (event: Event) => {
+      const token = (event as CustomEvent<string>).detail;
+      if (token) setToken(token);
+    };
+
+    const handleLogout = () => {
+      setUser(null);
+      setToken(null);
+      router.push("/login");
+    };
+
+    window.addEventListener("auth:token-refreshed", handleTokenRefreshed);
+    window.addEventListener("auth:logout", handleLogout);
+
+    return () => {
+      window.removeEventListener("auth:token-refreshed", handleTokenRefreshed);
+      window.removeEventListener("auth:logout", handleLogout);
+    };
+  }, [router]);
+
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
     setUser(session.user);
