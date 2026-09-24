@@ -23,6 +23,7 @@ El proyecto implementa una arquitectura limpia por capas tanto en el **Backend**
 - **Entities (`src/entities/`)**: Modelos limpios de dominio del cliente (`User`, `Product`, `AuthSession`) enriquecidos para la interfaz.
 - **Mappers (`src/mappers/`)**: Funciones puras encargadas de mapear DTOs a Entidades y Entidades a DTOs de petición.
 - **Services (`src/services/`)**: Servicios de red tipados (`AuthService`, `ProductService`, `ApiClient`) con inyección del token JWT en el encabezado `Authorization: Bearer <token>`.
+- **BFF (`src/app/api/[...path]/route.ts`)**: Route Handler de Next.js que recibe las llamadas del navegador en `/api/*` y las reenvía a Spring Boot desde el servidor, conservando método, parámetros, cuerpo, estado y encabezados relevantes.
 - **Context (`src/context/`)**: Estado reactivo global de autenticación (`AuthContext`).
 - **Components (`src/components/`)**:
   - `Carousel`: Carrusel dinámico de productos en la página principal con auto-avance, navegación por flechas e indicadores.
@@ -91,6 +92,10 @@ npm run dev
 ```
 La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
+El navegador siempre llama a `/api/*` en el mismo origen del frontend. Para ejecutar Next.js fuera de Docker, el BFF usa `http://localhost:8080` como destino predeterminado. Si el backend está en otra dirección, configura `BACKEND_URL` **solo en el entorno del servidor Next.js**; no uses una variable `NEXT_PUBLIC_*` para esa dirección. En Docker Compose, `BACKEND_URL` apunta al servicio interno `http://backend:8080`.
+
+Para obtener la evidencia de la Fase 1, abre las herramientas de desarrollo del navegador en la pestaña **Red**, recarga la página y luego inicia sesión. Las solicitudes de productos y autenticación deben aparecer como `http://localhost:3000/api/...`.
+
 ---
 
 ## 📡 Resumen de Endpoints de la API REST
@@ -138,7 +143,8 @@ app_segundo_parcial/
 │       │           ├── 001-create-users-roles.xml
 │       │           ├── 002-insert-roles-users.xml
 │       │           ├── 003-create-products.xml
-│       │           └── 004-insert-initial-products.xml
+│       │           ├── 004-insert-initial-products.xml
+│       │           └── 005-sync-products-sequence.xml
 │       └── test/java/com/umg/examen/PasswordEncoderTest.java
 ├── frontend/
 │   ├── Dockerfile
@@ -150,6 +156,7 @@ app_segundo_parcial/
 │       ├── app/
 │       │   ├── layout.tsx
 │       │   ├── page.tsx (Página pública con Carrusel interactivo)
+│       │   ├── api/[...path]/route.ts (Pasarela BFF hacia Spring Boot)
 │       │   ├── login/page.tsx (Pantalla de login con presets)
 │       │   └── dashboard/
 │       │       ├── layout.tsx (Layout privado con Sidebar)

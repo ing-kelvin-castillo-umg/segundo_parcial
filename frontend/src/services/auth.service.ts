@@ -6,7 +6,7 @@ import { ApiClient } from "./api.client";
 export class AuthService {
   static async login(credentials: { username: string; password: string }): Promise<AuthSession> {
     const dto = AuthMapper.toLoginDto(credentials);
-    const response = await ApiClient.post<AuthResponseDto>("/api/auth/login", dto);
+    const response = await ApiClient.post<AuthResponseDto>("/auth/login", dto);
     const session = AuthMapper.toSession(response.data);
 
     if (typeof window !== "undefined") {
@@ -18,7 +18,7 @@ export class AuthService {
   }
 
   static async getCurrentUser(): Promise<User> {
-    const response = await ApiClient.get<UserResponseDto>("/api/auth/me");
+    const response = await ApiClient.get<UserResponseDto>("/auth/me");
     return AuthMapper.toUserFromResponse(response.data);
   }
 
