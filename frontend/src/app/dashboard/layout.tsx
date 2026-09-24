@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
+import { SessionTimeout } from "@/components/SessionTimeout";
 
 export default function DashboardLayout({
   children,
@@ -35,6 +36,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
+      <SessionTimeout />
       {/* Left Sidebar */}
       <Sidebar />
 

@@ -12,7 +12,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: "manual" | "inactivity") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,11 +38,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
+  const logout = async (reason: "manual" | "inactivity" = "manual") => {
+    await AuthService.logout();
     setUser(null);
     setToken(null);
-    router.push("/");
+    router.replace(reason === "inactivity" ? "/login?reason=inactive" : "/");
   };
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));

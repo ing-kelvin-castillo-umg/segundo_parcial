@@ -86,6 +86,13 @@ public class AuthServiceImpl implements AuthService {
         return userMapper.toAuthResponse(user, accessToken, createRefreshToken(user));
     }
 
+    @Override
+    @Transactional
+    public void logout(String refreshTokenValue) {
+        refreshTokenRepository.findByToken(refreshTokenValue)
+                .ifPresent(token -> token.setRevoked(true));
+    }
+
     private String createRefreshToken(User user) {
         byte[] randomBytes = new byte[48];
         secureRandom.nextBytes(randomBytes);
