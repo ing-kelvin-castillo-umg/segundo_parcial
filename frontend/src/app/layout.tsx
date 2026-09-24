@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { InactivityProvider } from "@/context/InactivityContext";
 
 export const metadata: Metadata = {
   title: "Examen Parcial - Sistema de Productos UMG",
@@ -16,7 +17,7 @@ export default function RootLayout({
     <html lang="es">
       <body className="antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900">
         <AuthProvider>
-          {children}
+          <InactivityProvider>{children}</InactivityProvider>
         </AuthProvider>
       </body>
     </html>
