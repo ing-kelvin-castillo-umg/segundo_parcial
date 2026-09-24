@@ -105,7 +105,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 space-y-8 max-w-7xl w-full mx-auto">
+    <div className="p-4 sm:p-8 lg:p-10 space-y-8 max-w-7xl w-full mx-auto">
       {/* Toast alert */}
       {toast && (
         <div
@@ -125,34 +125,34 @@ export default function ProductsPage() {
       )}
 
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 p-5 sm:p-6 rounded-3xl bg-white border border-emerald-100 shadow-sm">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center gap-2 text-emerald-700 text-xs font-semibold uppercase tracking-wider mb-1">
+            <Boxes className="w-4 h-4 text-emerald-600" />
             <span>Módulo de Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
             Gestión de Productos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-stone-500 mt-1">
             Consulta, busca y gestiona el inventario de productos en tiempo real.
           </p>
         </div>
 
         {/* User Role Badge & Refresh */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <button
             onClick={loadProducts}
             disabled={loading}
             title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors shadow-sm disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-emerald-600" : ""}`} />
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-stone-50 border border-stone-200 shadow-sm text-xs font-semibold text-stone-700">
             {isAdmin ? (
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
             ) : (
               <UserIcon className="w-4 h-4 text-emerald-600" />
             )}
@@ -160,7 +160,7 @@ export default function ProductsPage() {
             <span
               className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                 isAdmin
-                  ? "bg-indigo-100 text-indigo-800"
+                  ? "bg-amber-100 text-amber-800"
                   : "bg-emerald-100 text-emerald-800"
               }`}
             >
