@@ -1,9 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
-import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +11,7 @@ interface AuthContextType {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  logoutForInactivity: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,7 +19,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     let active = true;
@@ -45,14 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(session.user);
   };
 
-  const logout = async () => {
+  const endSession = useCallback(async (reason: "manual" | "inactivity") => {
     try {
       await AuthService.logout();
+    } catch {
+      // El estado local debe cerrarse aunque el BFF no esté disponible.
     } finally {
       setUser(null);
-      router.push("/");
+      const destination = reason === "inactivity" ? "/login?reason=inactivity" : "/";
+      window.location.replace(destination);
     }
-  };
+  }, []);
+
+  const logout = useCallback(() => endSession("manual"), [endSession]);
+  const logoutForInactivity = useCallback(() => endSession("inactivity"), [endSession]);
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
   const isAuthenticated = !!user;
@@ -66,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         login,
         logout,
+        logoutForInactivity,
       }}
     >
       {children}

@@ -1,47 +1,20 @@
-"use client";
+import { DashboardShell } from "@/components/DashboardShell";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { Sidebar } from "@/components/Sidebar";
-import { Loader2 } from "lucide-react";
+const DEFAULT_INACTIVITY_TIMEOUT_MS = 15_000;
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { isAuthenticated, loading } = useAuth();
-  const router = useRouter();
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, loading, router]);
+function getInactivityTimeoutMs(): number {
+  const configuredTimeout = Number(process.env.SESSION_INACTIVITY_TIMEOUT_MS);
+  return Number.isFinite(configuredTimeout) && configuredTimeout > 0
+    ? configuredTimeout
+    : DEFAULT_INACTIVITY_TIMEOUT_MS;
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
-        <p className="text-sm">Verificando sesión...</p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      {/* Left Sidebar */}
-      <Sidebar />
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {children}
-      </div>
-    </div>
+    <DashboardShell inactivityTimeoutMs={getInactivityTimeoutMs()}>
+      {children}
+    </DashboardShell>
   );
 }
