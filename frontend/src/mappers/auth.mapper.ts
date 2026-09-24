@@ -13,9 +13,8 @@ export class AuthMapper {
     };
 
     return {
-      token: dto.token,
       user: user,
-      isAuthenticated: !!dto.token,
+      isAuthenticated: true,
       isAdmin: roles.includes("ROLE_ADMIN"),
     };
   }

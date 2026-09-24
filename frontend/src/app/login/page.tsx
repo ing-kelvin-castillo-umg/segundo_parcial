@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -20,9 +20,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const { login } = useAuth();
   const router = useRouter();
+
+  // Mensaje informativo cuando se llega aquí porque la sesión terminó (/login?reason=...)
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    const messages: Record<string, string> = {
+      expired: "Tu sesión expiró. Inicia sesión nuevamente.",
+    };
+    if (reason && messages[reason]) setNotice(messages[reason]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +113,14 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+
+        {/* Session End Notice */}
+        {notice && !error && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{notice}</span>
+          </div>
+        )}
 
         {/* Error Notification */}
         {error && (

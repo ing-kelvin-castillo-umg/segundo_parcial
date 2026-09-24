@@ -35,7 +35,8 @@ services:
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      JWT_EXPIRATION_MS: 86400000
+      JWT_EXPIRATION_MS: 5000             # access token: 5 segundos (demostración del refresh)
+      JWT_REFRESH_EXPIRATION_MS: 1800000  # refresh token: 30 minutos
     # Solo accesible desde esta máquina (Swagger / pruebas con curl). El navegador de la app
     # nunca llama aquí: el frontend (BFF) contacta al backend por la red interna de Docker.
     ports:

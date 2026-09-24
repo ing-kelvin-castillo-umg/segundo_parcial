@@ -25,7 +25,12 @@ app:
   jwt:
     # 256-bit secret key for HMAC-SHA256 (Base64 encoded)
     secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
+    # Política de sesión:
+    # - Access token (JWT): vida corta. Se envía en cada petición; si expira el cliente recibe 401 y renueva.
+    # - Refresh token (opaco, persistido como hash en refresh_tokens): vida más larga, rotación en cada uso
+    #   y revocación de todos los tokens del usuario si se detecta reutilización.
+    expiration-ms: ${JWT_EXPIRATION_MS:60000} # 1 minuto (demostración)
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:1800000} # 30 minutos
 
 springdoc:
   api-docs:

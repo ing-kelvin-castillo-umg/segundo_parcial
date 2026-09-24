@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Los productos semilla (004) se insertan con IDs explícitos, por lo que la secuencia
+        de la columna identity queda desfasada y el primer INSERT desde la API choca con
+        pk_products. Se sincroniza la secuencia con el MAX(id) actual.
+    -->
+    <changeSet id="005-1-sync-products-id-sequence" author="umg" dbms="postgresql">
+        <sql>
+            SELECT setval(pg_get_serial_sequence('products', 'id'), (SELECT COALESCE(MAX(id), 1) FROM products));
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

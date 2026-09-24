@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { BACKEND_URL, getAccessToken } from "@/bff/session";
 
 /**
  * BFF / Proxy inverso.
@@ -7,14 +8,15 @@ import { NextRequest, NextResponse } from "next/server";
  * reenvía la petición al backend de Spring Boot por la red interna de Docker y devuelve
  * la respuesta tal cual. La URL real del backend vive en BACKEND_URL, una variable
  * exclusiva del servidor (sin prefijo NEXT_PUBLIC_), por lo que nunca llega al bundle del cliente.
+ *
+ * El access token viaja en la cookie httpOnly "access_token" y aquí se traduce al encabezado
+ * Authorization: Bearer que espera el backend. Login, refresh y logout tienen sus propios handlers en /api/auth/*.
  */
 
 export const dynamic = "force-dynamic";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://backend:8080";
-
 // Solo se reenvían los encabezados que el backend necesita; el resto (Host, Origin, Cookie...) se descarta.
-const FORWARDED_REQUEST_HEADERS = ["authorization", "content-type", "accept"];
+const FORWARDED_REQUEST_HEADERS = ["content-type", "accept"];
 
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
   const targetUrl = `${BACKEND_URL}/api/${params.path.join("/")}${request.nextUrl.search}`;
@@ -23,6 +25,11 @@ async function proxy(request: NextRequest, { params }: { params: { path: string[
   for (const name of FORWARDED_REQUEST_HEADERS) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
+  }
+
+  const accessToken = getAccessToken(request);
+  if (accessToken) {
+    headers.set("authorization", `Bearer ${accessToken}`);
   }
 
   const hasBody = !["GET", "HEAD"].includes(request.method);

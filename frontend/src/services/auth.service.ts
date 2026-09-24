@@ -3,6 +3,10 @@ import { AuthSession, User } from "@/entities/user.entity";
 import { AuthMapper } from "@/mappers/auth.mapper";
 import { ApiClient } from "./api.client";
 
+// Solo se guarda el perfil público del usuario (para pintar la UI y saber si había sesión).
+// Los tokens viven en cookies httpOnly del BFF y nunca se escriben en localStorage.
+const USER_STORAGE_KEY = "user";
+
 export class AuthService {
   static async login(credentials: { username: string; password: string }): Promise<AuthSession> {
     const dto = AuthMapper.toLoginDto(credentials);
@@ -10,8 +14,8 @@ export class AuthService {
     const session = AuthMapper.toSession(response.data);
 
     if (typeof window !== "undefined") {
-      localStorage.setItem("token", session.token);
-      localStorage.setItem("user", JSON.stringify(session.user));
+      localStorage.removeItem("token"); // restos de la versión anterior (token en localStorage)
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(session.user));
     }
 
     return session;
@@ -22,29 +26,29 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+  static async logout(): Promise<void> {
+    try {
+      await ApiClient.post<null>("/api/auth/logout", {});
+    } finally {
+      this.clearLocalSession();
     }
   }
 
-  static getStoredSession(): AuthSession | null {
+  static clearLocalSession(): void {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem(USER_STORAGE_KEY);
+    }
+  }
+
+  static getStoredUser(): User | null {
     if (typeof window === "undefined") return null;
 
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-
-    if (!token || !userStr) return null;
+    const userStr = localStorage.getItem(USER_STORAGE_KEY);
+    if (!userStr) return null;
 
     try {
-      const user = JSON.parse(userStr) as User;
-      return {
-        token,
-        user,
-        isAuthenticated: true,
-        isAdmin: user.roles?.includes("ROLE_ADMIN") || false,
-      };
+      return JSON.parse(userStr) as User;
     } catch {
       return null;
     }

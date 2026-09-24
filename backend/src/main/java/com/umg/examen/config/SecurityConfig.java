@@ -74,6 +74,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**"
                         ).permitAll()
+                        // Página de error interna: sin esto un 403 (rol insuficiente) se reenvía a /error y
+                        // termina como 401, que el cliente confundiría con "access token expirado".
+                        .requestMatchers("/error").permitAll()
                         // Rutas públicas de Autenticación
                         .requestMatchers("/api/auth/**").permitAll()
                         // Lectura de productos abierta para carrusel y catálogo público

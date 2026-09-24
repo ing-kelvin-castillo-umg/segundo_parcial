@@ -48,4 +48,13 @@ public class UserMapper {
         response.setRoles(roles);
         return response;
     }
+
+    public AuthResponse toAuthResponse(User user, String token, String refreshToken, long expiresInMs) {
+        AuthResponse response = toAuthResponse(user, token);
+        if (response != null) {
+            response.setRefreshToken(refreshToken);
+            response.setExpiresIn(expiresInMs);
+        }
+        return response;
+    }
 }

@@ -100,6 +100,7 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 | Método | Endpoint | Descripción | Acceso |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/login` | Iniciar sesión y obtener token JWT | Público |
+| `POST` | `/api/auth/refresh` | Renovar access token (refresh token rotativo, validado y revocable en BD) | Público (refresh token) |
 | `GET` | `/api/auth/me` | Obtener perfil del usuario en sesión | Autenticado |
 | `GET` | `/api/products` | Listar productos (con soporte `?query=`) | Público / Carrusel |
 | `GET` | `/api/products/{id}` | Obtener detalle de un producto por ID | Público / Autenticado |

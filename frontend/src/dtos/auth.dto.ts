@@ -3,8 +3,9 @@ export interface LoginRequestDto {
   password: string;
 }
 
+// Respuesta de login/refresh del BFF: los tokens quedan en cookies httpOnly y no viajan en el cuerpo.
 export interface AuthResponseDto {
-  token: string;
+  expiresIn: number;
   type: string;
   username: string;
   fullName: string;
