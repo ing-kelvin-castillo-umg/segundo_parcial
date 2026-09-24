@@ -49,23 +49,23 @@ export const DataTable: React.FC<DataTableProps> = ({
   }, [products, searchTerm]);
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="w-full bg-white rounded-2xl shadow-sm border border-harbor-100 overflow-hidden">
       {/* Table Toolbar */}
-      <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+      <div className="p-5 border-b border-harbor-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-harbor-50/80">
         {/* Search Bar */}
         <div className="relative w-full sm:w-96">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-harbor-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre, categoría, precio, stock..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-harbor-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-harbor-500 focus:border-transparent transition-all"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-harbor-500 hover:text-harbor-800"
             >
               Limpiar
             </button>
@@ -74,7 +74,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
         {/* Actions & Role Indicator */}
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-xs text-harbor-700 font-medium">
             Mostrando {filteredProducts.length} de {products.length} productos
           </span>
 
@@ -82,13 +82,13 @@ export const DataTable: React.FC<DataTableProps> = ({
           {isAdmin ? (
             <button
               onClick={onCreate}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all hover:shadow"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-coral-500 hover:bg-coral-600 text-white text-sm font-semibold shadow-sm transition-all hover:shadow"
             >
               <Plus className="w-4 h-4" />
               <span>Nuevo Producto</span>
             </button>
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-citrus-50 border border-citrus-200 text-citrus-800 text-xs font-medium">
               <span>Modo Lectura (Usuario Estándar)</span>
             </div>
           )}
@@ -97,8 +97,8 @@ export const DataTable: React.FC<DataTableProps> = ({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-100/70 text-slate-700 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
+        <table className="w-full text-left text-sm text-harbor-800">
+          <thead className="bg-harbor-900 text-harbor-50 text-xs uppercase font-bold tracking-wider border-b border-harbor-800">
             <tr>
               <th scope="col" className="px-6 py-4">Producto</th>
               <th scope="col" className="px-6 py-4">Categoría</th>
@@ -107,17 +107,17 @@ export const DataTable: React.FC<DataTableProps> = ({
               <th scope="col" className="px-6 py-4 text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody className="divide-y divide-harbor-100">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <tr
                   key={product.id}
-                  className="hover:bg-blue-50/40 transition-colors group"
+                  className="hover:bg-harbor-50/70 transition-colors group"
                 >
                   {/* Name & Thumbnail */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-harbor-50 border border-harbor-100 shrink-0 relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={product.imageUrl}
@@ -130,8 +130,8 @@ export const DataTable: React.FC<DataTableProps> = ({
                         />
                       </div>
                       <div className="max-w-xs sm:max-w-sm">
-                        <p className="font-bold text-slate-900 line-clamp-1">{product.name}</p>
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">
+                        <p className="font-bold text-harbor-950 line-clamp-1">{product.name}</p>
+                        <p className="text-xs text-harbor-700/70 line-clamp-2 mt-0.5">
                           {product.description}
                         </p>
                       </div>
@@ -140,14 +140,14 @@ export const DataTable: React.FC<DataTableProps> = ({
 
                   {/* Category */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                      <Tag className="w-3 h-3 text-slate-400" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-citrus-50 text-harbor-800 border border-citrus-200">
+                      <Tag className="w-3 h-3 text-coral-500" />
                       {product.category}
                     </span>
                   </td>
 
                   {/* Price */}
-                  <td className="px-6 py-4 whitespace-nowrap font-extrabold text-slate-900">
+                  <td className="px-6 py-4 whitespace-nowrap font-extrabold text-harbor-950">
                     {product.formattedPrice}
                   </td>
 
@@ -175,7 +175,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                       <button
                         onClick={() => onView(product)}
                         title="Ver producto en grande"
-                        className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-harbor-700 hover:text-harbor-950 hover:bg-harbor-100 rounded-lg transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -185,7 +185,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                         <button
                           onClick={() => onEdit(product)}
                           title="Editar producto"
-                          className="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-2 text-harbor-700 hover:text-citrus-800 hover:bg-citrus-100 rounded-lg transition-colors"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
@@ -196,7 +196,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                         <button
                           onClick={() => onDelete(product)}
                           title="Eliminar producto"
-                          className="p-2 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-2 text-harbor-700 hover:text-coral-700 hover:bg-coral-50 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -207,10 +207,10 @@ export const DataTable: React.FC<DataTableProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                  <PackageOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                  <p className="font-semibold text-slate-700">No se encontraron productos</p>
-                  <p className="text-xs text-slate-500 mt-1">
+                <td colSpan={5} className="px-6 py-12 text-center text-harbor-500">
+                  <PackageOpen className="w-12 h-12 mx-auto mb-3 text-harbor-300" />
+                  <p className="font-semibold text-harbor-800">No se encontraron productos</p>
+                  <p className="text-xs text-harbor-600 mt-1">
                     {searchTerm
                       ? `No hay coincidencias para "${searchTerm}"`
                       : "Aún no hay productos registrados en el sistema."}
