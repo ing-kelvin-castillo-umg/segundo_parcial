@@ -60,7 +60,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre, categoría, precio, stock..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#b7d5c8] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#43b995] focus:border-transparent transition-all"
           />
           {searchTerm && (
             <button
@@ -82,7 +82,7 @@ export const DataTable: React.FC<DataTableProps> = ({
           {isAdmin ? (
             <button
               onClick={onCreate}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all hover:shadow"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#16856f] hover:bg-[#116b5b] text-white text-sm font-semibold shadow-sm transition-all hover:shadow"
             >
               <Plus className="w-4 h-4" />
               <span>Nuevo Producto</span>
@@ -112,7 +112,7 @@ export const DataTable: React.FC<DataTableProps> = ({
               filteredProducts.map((product) => (
                 <tr
                   key={product.id}
-                  className="hover:bg-blue-50/40 transition-colors group"
+                  className="hover:bg-[#effaf6] transition-colors group"
                 >
                   {/* Name & Thumbnail */}
                   <td className="px-6 py-4">
@@ -175,7 +175,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                       <button
                         onClick={() => onView(product)}
                         title="Ver producto en grande"
-                        className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-600 hover:text-[#16856f] hover:bg-[#effaf6] rounded-lg transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                       </button>

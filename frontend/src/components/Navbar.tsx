@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:bg-blue-700 transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-[#16856f] flex items-center justify-center text-white shadow-md shadow-[#16856f]/20 group-hover:bg-[#43b995] transition-colors">
             <Package className="w-5 h-5" />
           </div>
           <div className="flex flex-col">
@@ -28,7 +28,7 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard/products"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#116b5b] bg-[#d8f3e9] hover:bg-[#b1e7d2] rounded-lg transition-colors"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span>Panel de Productos</span>
@@ -57,7 +57,7 @@ export const Navbar: React.FC = () => {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-600/20 transition-all hover:shadow-md hover:shadow-blue-600/30"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#16856f] hover:bg-[#116b5b] rounded-lg shadow-sm shadow-[#16856f]/20 transition-all"
             >
               <LogIn className="w-4 h-4" />
               <span>Iniciar Sesión</span>

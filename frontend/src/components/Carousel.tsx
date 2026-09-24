@@ -45,20 +45,20 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white shadow-2xl border border-slate-800"
+      className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d302c] via-[#16483e] to-[#102f2b] text-white shadow-2xl border border-[#356354]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Decorative background glow */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#f2b84b]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-[#16856f]/25 rounded-full blur-3xl pointer-events-none" />
 
       {/* Slide Content */}
       <div className="relative min-h-[420px] sm:min-h-[460px] grid grid-cols-1 lg:grid-cols-12 items-center p-6 sm:p-10 gap-8">
         {/* Text Info (Left) */}
         <div className="lg:col-span-6 flex flex-col justify-center space-y-4 z-10">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#16856f]/25 text-[#b9f0d4] border border-[#79d4b4]/40 backdrop-blur-sm">
               <Tag className="w-3.5 h-3.5" />
               {currentProduct.category}
             </span>
@@ -84,7 +84,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
           </p>
 
           <div className="pt-2 flex items-baseline gap-3">
-            <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300">
+            <span className="text-3xl sm:text-4xl font-black text-[#f2b84b]">
               {currentProduct.formattedPrice}
             </span>
             <span className="text-xs text-slate-400 uppercase tracking-wider">Precio sugerido</span>
@@ -94,7 +94,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
             <div className="pt-2">
               <button
                 onClick={() => onSelectProduct(currentProduct)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#d9922e] hover:bg-[#f2b84b] text-[#102f2b] font-semibold text-sm shadow-lg shadow-[#d9922e]/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span>Ver Detalle del Producto</span>
               </button>
@@ -147,7 +147,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
             aria-label={`Ir a producto ${idx + 1}`}
             className={`transition-all duration-300 rounded-full ${
               idx === currentIndex
-                ? "w-8 h-2.5 bg-blue-400"
+                ? "w-8 h-2.5 bg-[#f2b84b]"
                 : "w-2.5 h-2.5 bg-white/30 hover:bg-white/60"
             }`}
           />
