@@ -4,6 +4,7 @@ import { ApiResponseDto } from "@/dtos/auth.dto";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const REFRESH_ENDPOINT = "/api/auth/refresh";
 const LOGIN_ENDPOINT = "/api/auth/login";
+const LOGOUT_ENDPOINT = "/api/auth/logout";
 
 interface ApiRequestOptions extends RequestInit {
   _retry?: boolean;
@@ -108,7 +109,13 @@ export class ApiClient {
 
       const data = await response.json().catch(() => null);
 
-      if (response.status === 401 && !_retry && endpoint !== REFRESH_ENDPOINT && endpoint !== LOGIN_ENDPOINT) {
+      if (
+        response.status === 401 &&
+        !_retry &&
+        endpoint !== REFRESH_ENDPOINT &&
+        endpoint !== LOGIN_ENDPOINT &&
+        endpoint !== LOGOUT_ENDPOINT
+      ) {
         const newToken = await this.refreshAccessToken();
         if (newToken) {
           return this.request<T>(endpoint, { ...options, _retry: true });

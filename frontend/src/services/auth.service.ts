@@ -25,6 +25,14 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
+  static async logoutRemote(): Promise<void> {
+    try {
+      await ApiClient.post<void>("/api/auth/logout", {});
+    } catch {
+      // Local cleanup must still happen when the backend is unavailable.
+    }
+  }
+
   static logout(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
