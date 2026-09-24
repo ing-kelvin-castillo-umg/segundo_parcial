@@ -5,6 +5,8 @@ import { ApiResponseDto } from "@/dtos/auth.dto";
 const API_BASE_URL = "";
 
 export class ApiClient {
+  private static refreshRequest: Promise<boolean> | null = null;
+
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("token");
@@ -12,7 +14,7 @@ export class ApiClient {
     return null;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  static async request<T>(endpoint: string, options: RequestInit = {}, retried = false): Promise<ApiResponseDto<T>> {
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const token = this.getToken();
 
@@ -33,6 +35,13 @@ export class ApiClient {
       });
 
       const data = await response.json();
+
+      if (response.status === 401 && !retried && endpoint !== "/api/auth/refresh" && endpoint !== "/api/auth/login") {
+        const refreshed = await this.refreshAccessToken();
+        if (refreshed) {
+          return this.request<T>(endpoint, options, true);
+        }
+      }
 
       if (!response.ok) {
         const errorMsg = data?.message || `Error HTTP ${response.status}: ${response.statusText}`;
@@ -66,5 +75,50 @@ export class ApiClient {
 
   static delete<T>(endpoint: string): Promise<ApiResponseDto<T>> {
     return this.request<T>(endpoint, { method: "DELETE" });
+  }
+
+  private static async refreshAccessToken(): Promise<boolean> {
+    if (typeof window === "undefined") return false;
+    if (!this.refreshRequest) {
+      this.refreshRequest = this.requestRefreshToken().finally(() => {
+        this.refreshRequest = null;
+      });
+    }
+    return this.refreshRequest;
+  }
+
+  private static async requestRefreshToken(): Promise<boolean> {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      this.endExpiredSession();
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      const payload = (await response.json()) as ApiResponseDto<{ token: string; refreshToken: string }>;
+      if (!response.ok || !payload.success || !payload.data?.token || !payload.data?.refreshToken) {
+        this.endExpiredSession();
+        return false;
+      }
+
+      localStorage.setItem("token", payload.data.token);
+      localStorage.setItem("refreshToken", payload.data.refreshToken);
+      return true;
+    } catch {
+      this.endExpiredSession();
+      return false;
+    }
+  }
+
+  private static endExpiredSession(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    window.location.assign("/login?reason=session-expired");
   }
 }
