@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Initial data uses explicit IDs, so PostgreSQL's generated-ID sequence
+         must be advanced before the first product created through the API. -->
+    <changeSet id="005-1-sync-products-id-sequence" author="umg">
+        <sql>SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), true);</sql>
+    </changeSet>
+
+</databaseChangeLog>

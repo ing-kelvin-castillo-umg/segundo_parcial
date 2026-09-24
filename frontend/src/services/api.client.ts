@@ -1,6 +1,8 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+// The browser only communicates with Next.js route handlers. The handlers are
+// responsible for reaching the internal Spring Boot service.
+const API_BASE_URL = "";
 
 export class ApiClient {
   private static getToken(): string | null {
