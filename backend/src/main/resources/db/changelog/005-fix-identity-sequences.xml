@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Las semillas iniciales insertan los identificadores de forma explícita, por
+        lo que las secuencias de identidad quedan en 1 y el primer alta programática
+        choca contra la llave primaria. Este changeSet las reposiciona.
+    -->
+    <changeSet id="005-1-fix-identity-sequences" author="umg">
+        <sql>
+            SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT COALESCE(MAX(id), 1) FROM roles));
+            SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT COALESCE(MAX(id), 1) FROM users));
+            SELECT setval(pg_get_serial_sequence('products', 'id'), (SELECT COALESCE(MAX(id), 1) FROM products));
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

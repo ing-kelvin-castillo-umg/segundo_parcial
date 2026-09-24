@@ -1,8 +1,10 @@
 package com.umg.examen.controller;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.ApiResponse;
 import com.umg.examen.dto.response.AuthResponse;
+import com.umg.examen.dto.response.TokenRefreshResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +31,14 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse authResponse = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("Inicio de sesión exitoso", authResponse));
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Renovar token de acceso",
+            description = "Entrega un nuevo token JWT de acceso a partir de un refresh token vigente. El refresh token se rota en cada renovación.")
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        TokenRefreshResponse refreshed = authService.refresh(request.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.success("Token de acceso renovado", refreshed));
     }
 
     @GetMapping("/me")

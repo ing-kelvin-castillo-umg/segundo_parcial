@@ -1,6 +1,7 @@
 package com.umg.examen.config;
 
 import com.umg.examen.dto.response.ApiResponse;
+import com.umg.examen.service.impl.RefreshTokenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,6 +21,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Credenciales inválidas. Verifica tu usuario y contraseña."));
+    }
+
+    @ExceptionHandler(RefreshTokenException.class)
+    public ResponseEntity<ApiResponse<String>> handleRefreshToken(RefreshTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

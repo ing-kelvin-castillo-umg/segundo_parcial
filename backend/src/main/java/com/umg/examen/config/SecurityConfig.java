@@ -1,6 +1,7 @@
 package com.umg.examen.config;
 
 import com.umg.examen.security.CustomUserDetailsService;
+import com.umg.examen.security.JwtAccessDeniedHandler;
 import com.umg.examen.security.JwtAuthenticationEntryPoint;
 import com.umg.examen.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -28,15 +29,18 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService,
                           JwtAuthenticationEntryPoint authenticationEntryPoint,
+                          JwtAccessDeniedHandler accessDeniedHandler,
                           JwtAuthenticationFilter jwtAuthenticationFilter,
                           CorsConfigurationSource corsConfigurationSource) {
         this.userDetailsService = userDetailsService;
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.corsConfigurationSource = corsConfigurationSource;
     }
@@ -64,7 +68,9 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(authenticationEntryPoint))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Rutas públicas de Swagger / OpenAPI

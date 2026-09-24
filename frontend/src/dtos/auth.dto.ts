@@ -10,6 +10,15 @@ export interface AuthResponseDto {
   fullName: string;
   email: string;
   roles: string[];
+  // Vigencia del access token. El refreshToken no aparece aquí de forma
+  // intencional: nunca llega al navegador, viaja en una cookie httpOnly.
+  expiresInMs?: number;
+}
+
+export interface TokenRefreshResponseDto {
+  token: string;
+  type: string;
+  expiresInMs?: number;
 }
 
 export interface UserResponseDto {
