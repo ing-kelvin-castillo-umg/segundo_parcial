@@ -44,38 +44,38 @@ export const InactivityGuard: React.FC = () => {
     <>
       {/* Indicador del temporizador de inactividad */}
       <div
-        className={`fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg border backdrop-blur transition-colors ${
+        className={`fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tabular-nums shadow-lg border backdrop-blur transition-colors ${
           isWarning
-            ? "bg-amber-500/90 text-white border-amber-400"
-            : "bg-slate-900/85 text-slate-200 border-slate-700"
+            ? "bg-accent text-accent-foreground border-accent-400"
+            : "bg-secondary-900/90 text-secondary-100 border-secondary-700"
         }`}
         title="Tiempo restante antes del cierre de sesión por inactividad"
       >
-        <Clock className="w-3.5 h-3.5" />
+        <Clock className="w-3.5 h-3.5" aria-hidden="true" />
         <span>Inactividad: {formatClock(remainingMs)}</span>
       </div>
 
       {/* Modal de advertencia en los últimos segundos */}
       {isWarning && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-950/70 backdrop-blur-sm px-4 animate-fade-in"
           role="alertdialog"
           aria-modal="true"
           aria-labelledby="inactivity-title"
           aria-describedby="inactivity-description"
         >
-          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 space-y-5 text-center">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6" />
+          <div className="w-full max-w-sm bg-surface rounded-2xl shadow-2xl border border-border p-6 space-y-5 text-center animate-scale-in">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-warning-100 text-warning-700 flex items-center justify-center">
+              <ShieldAlert className="w-6 h-6" aria-hidden="true" />
             </div>
             <div className="space-y-1.5">
-              <h2 id="inactivity-title" className="text-lg font-bold text-slate-900">
+              <h2 id="inactivity-title" className="text-lg font-bold text-foreground">
                 ¿Sigues ahí?
               </h2>
-              <p id="inactivity-description" className="text-sm text-slate-600">
+              <p id="inactivity-description" className="text-sm text-muted-foreground">
                 Por seguridad, tu sesión se cerrará por inactividad en
               </p>
-              <p className="text-4xl font-black tabular-nums text-amber-600" aria-live="assertive">
+              <p className="text-4xl font-black tabular-nums text-warning-700" aria-live="assertive">
                 {secondsLeft}s
               </p>
             </div>
@@ -84,16 +84,16 @@ export const InactivityGuard: React.FC = () => {
                 type="button"
                 autoFocus
                 onClick={keepAlive}
-                className="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors"
+                className="btn btn-primary w-full"
               >
                 Seguir conectado
               </button>
               <button
                 type="button"
                 onClick={() => void logout("MANUAL")}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium transition-colors"
+                className="btn btn-sm w-full py-2 text-muted-foreground hover:text-danger-700 hover:bg-danger-50"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
                 Cerrar sesión ahora
               </button>
             </div>

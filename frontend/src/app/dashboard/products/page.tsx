@@ -5,6 +5,7 @@ import { Product } from "@/entities/product.entity";
 import { ProductService } from "@/services/product.service";
 import { useAuth } from "@/context/AuthContext";
 import { DataTable } from "@/components/DataTable";
+import { ProductMetrics } from "@/components/ProductMetrics";
 import {
   ViewProductModal,
   ProductFormModal,
@@ -105,63 +106,60 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 space-y-8 max-w-7xl w-full mx-auto">
-      {/* Toast alert */}
+    <div className="p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 max-w-7xl w-full mx-auto">
+      {/* Toast */}
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-xl border text-sm font-medium animate-in slide-in-from-bottom-5 duration-300 ${
+          role={toast.type === "success" ? "status" : "alert"}
+          className={`fixed bottom-16 right-4 left-4 sm:left-auto sm:right-6 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-xl border text-sm font-medium animate-slide-up ${
             toast.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-success-50 border-success-200 text-success-800"
+              : "bg-danger-50 border-danger-200 text-danger-800"
           }`}
         >
           {toast.type === "success" ? (
-            <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <CheckCircle className="w-5 h-5 shrink-0 text-success-700" aria-hidden="true" />
           ) : (
-            <AlertTriangle className="w-5 h-5 text-rose-600" />
+            <AlertTriangle className="w-5 h-5 shrink-0 text-danger-700" aria-hidden="true" />
           )}
           <span>{toast.message}</span>
         </div>
       )}
 
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Encabezado */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center gap-2 text-primary-700 text-xs font-bold uppercase tracking-widest mb-1">
+            <Boxes className="w-4 h-4" aria-hidden="true" />
             <span>Módulo de Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            Gestión de Productos
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">Gestión de Productos</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Consulta, busca y gestiona el inventario de productos en tiempo real.
           </p>
         </div>
 
-        {/* User Role Badge & Refresh */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={loadProducts}
             disabled={loading}
-            title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            aria-label="Recargar listado"
+            className="tooltip-trigger btn btn-secondary p-2.5"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-primary-700" : ""}`} aria-hidden="true" />
+            <span className="tooltip" role="tooltip">Recargar listado</span>
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface border border-border shadow-sm text-xs font-semibold text-muted-foreground">
             {isAdmin ? (
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-accent-700" aria-hidden="true" />
             ) : (
-              <UserIcon className="w-4 h-4 text-emerald-600" />
+              <UserIcon className="w-4 h-4 text-primary-700" aria-hidden="true" />
             )}
             <span>Rol:</span>
             <span
               className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
-                isAdmin
-                  ? "bg-indigo-100 text-indigo-800"
-                  : "bg-emerald-100 text-emerald-800"
+                isAdmin ? "bg-accent-100 text-accent-800" : "bg-primary-100 text-primary-800"
               }`}
             >
               {isAdmin ? "ADMINISTRADOR" : "USUARIO"}
@@ -169,6 +167,9 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      {/* Métricas */}
+      <ProductMetrics products={products} loading={loading && products.length === 0} />
 
       {/* Main DataTable */}
       <DataTable

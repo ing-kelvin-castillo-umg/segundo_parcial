@@ -1,158 +1,256 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Product } from "@/entities/product.entity";
-import { ChevronLeft, ChevronRight, Tag, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { getStockLevel, STOCK_BADGE } from "@/lib/stock";
+import { ChevronLeft, ChevronRight, Tag, ArrowRight } from "lucide-react";
 
 interface CarouselProps {
   products: Product[];
   onSelectProduct?: (product: Product) => void;
 }
 
-export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+const AUTOPLAY_MS = 5000;
+const SWIPE_THRESHOLD_PX = 40;
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=800&q=80";
 
-  const nextSlide = useCallback(() => {
-    if (products.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % products.length);
-  }, [products.length]);
-
-  const prevSlide = useCallback(() => {
-    if (products.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
-  }, [products.length]);
+/** Tarjetas visibles según el ancho: 1 (móvil), 2 (≥768px), 3 (≥1024px). */
+function useItemsPerView(): number {
+  const [items, setItems] = useState(1);
 
   useEffect(() => {
-    if (isHovered || products.length <= 1) return;
-    const interval = setInterval(() => {
-      nextSlide();
-    }, 4500);
+    const lg = window.matchMedia("(min-width: 1024px)");
+    const md = window.matchMedia("(min-width: 768px)");
+    const update = () => setItems(lg.matches ? 3 : md.matches ? 2 : 1);
+    update();
+    lg.addEventListener("change", update);
+    md.addEventListener("change", update);
+    return () => {
+      lg.removeEventListener("change", update);
+      md.removeEventListener("change", update);
+    };
+  }, []);
 
+  return items;
+}
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return reduced;
+}
+
+export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct }) => {
+  const itemsPerView = useItemsPerView();
+  const reducedMotion = usePrefersReducedMotion();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+
+  const maxIndex = Math.max(0, products.length - itemsPerView);
+  const pageCount = maxIndex + 1;
+
+  // Si cambia el ancho (o la lista), el índice no puede quedar fuera de rango.
+  useEffect(() => {
+    setCurrentIndex((i) => Math.min(i, maxIndex));
+  }, [maxIndex]);
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+  }, [maxIndex]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+  }, [maxIndex]);
+
+  useEffect(() => {
+    if (isPaused || reducedMotion || pageCount <= 1) return;
+    const interval = setInterval(nextSlide, AUTOPLAY_MS);
     return () => clearInterval(interval);
-  }, [isHovered, nextSlide, products.length]);
+  }, [isPaused, reducedMotion, nextSlide, pageCount]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prevSlide();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > SWIPE_THRESHOLD_PX) {
+      if (delta < 0) nextSlide();
+      else prevSlide();
+    }
+    touchStartX.current = null;
+  };
 
   if (!products || products.length === 0) {
     return (
-      <div className="w-full h-80 rounded-2xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400 p-8">
-        <Sparkles className="w-12 h-12 mb-3 text-slate-300 animate-pulse" />
-        <p className="text-base font-medium">Cargando catálogo de productos...</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-label="Cargando productos">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className={`card overflow-hidden ${i > 0 ? "hidden md:block" : ""} ${i > 1 ? "md:hidden lg:block" : ""}`}>
+            <div className="h-52 bg-muted animate-pulse" />
+            <div className="p-5 space-y-3">
+              <div className="h-4 w-1/3 rounded bg-muted animate-pulse" />
+              <div className="h-5 w-3/4 rounded bg-muted animate-pulse" />
+              <div className="h-4 w-full rounded bg-muted animate-pulse" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
 
-  const currentProduct = products[currentIndex];
+  const slideWidthPct = 100 / itemsPerView;
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white shadow-2xl border border-slate-800"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      role="region"
+      aria-roledescription="carrusel"
+      aria-label="Productos destacados"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocus={() => setIsPaused(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsPaused(false);
+      }}
+      className="relative rounded-3xl"
     >
-      {/* Decorative background glow */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Pista de tarjetas */}
+      <div
+        className="overflow-hidden -mx-3 px-0 py-4"
+        onTouchStart={(e) => (touchStartX.current = e.touches[0].clientX)}
+        onTouchEnd={handleTouchEnd}
+      >
+        <ul
+          className="flex transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{ transform: `translateX(-${currentIndex * slideWidthPct}%)` }}
+          aria-live={isPaused ? "polite" : "off"}
+        >
+          {products.map((product, idx) => {
+            const visible = idx >= currentIndex && idx < currentIndex + itemsPerView;
+            const level = getStockLevel(product.stock);
+            const stockBadge = STOCK_BADGE[level];
 
-      {/* Slide Content */}
-      <div className="relative min-h-[420px] sm:min-h-[460px] grid grid-cols-1 lg:grid-cols-12 items-center p-6 sm:p-10 gap-8">
-        {/* Text Info (Left) */}
-        <div className="lg:col-span-6 flex flex-col justify-center space-y-4 z-10">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-sm">
-              <Tag className="w-3.5 h-3.5" />
-              {currentProduct.category}
-            </span>
-            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${currentProduct.inStock ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border border-rose-500/30"}`}>
-              {currentProduct.inStock ? (
-                <>
-                  <CheckCircle2 className="w-3 h-3" /> {currentProduct.stock} disponibles
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-3 h-3" /> Agotado
-                </>
-              )}
-            </span>
-          </div>
-
-          <h3 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white line-clamp-2">
-            {currentProduct.name}
-          </h3>
-
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed line-clamp-3">
-            {currentProduct.description}
-          </p>
-
-          <div className="pt-2 flex items-baseline gap-3">
-            <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300">
-              {currentProduct.formattedPrice}
-            </span>
-            <span className="text-xs text-slate-400 uppercase tracking-wider">Precio sugerido</span>
-          </div>
-
-          {onSelectProduct && (
-            <div className="pt-2">
-              <button
-                onClick={() => onSelectProduct(currentProduct)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            return (
+              <li
+                key={product.id ?? idx}
+                role="group"
+                aria-roledescription="diapositiva"
+                aria-label={`${idx + 1} de ${products.length}: ${product.name}`}
+                aria-hidden={!visible}
+                className="shrink-0 px-3"
+                style={{ width: `${slideWidthPct}%` }}
               >
-                <span>Ver Detalle del Producto</span>
-              </button>
-            </div>
-          )}
-        </div>
+                <article className="card group h-full flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
+                  {/* Imagen + badges */}
+                  <div className="relative h-52 overflow-hidden bg-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={product.imageUrl || FALLBACK_IMAGE}
+                      alt={product.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary-950/50 via-transparent to-transparent" />
+                    <span className="absolute top-3 left-3 badge border-white/20 bg-secondary-900/80 text-white backdrop-blur-sm">
+                      <Tag className="w-3 h-3" aria-hidden="true" />
+                      {product.category || "General"}
+                    </span>
+                    <span className={`absolute top-3 right-3 badge shadow-sm ${stockBadge.className}`}>
+                      {stockBadge.label(product.stock)}
+                    </span>
+                  </div>
 
-        {/* Image Preview (Right) */}
-        <div className="lg:col-span-6 flex items-center justify-center relative">
-          <div className="w-full max-w-md h-64 sm:h-80 relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={currentProduct.imageUrl}
-              alt={currentProduct.name}
-              className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-              onError={(e) => {
-                // Fallback on broken image
-                (e.target as HTMLImageElement).src =
-                  "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=800&q=80";
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  {/* Contenido */}
+                  <div className="flex-1 flex flex-col p-5 gap-3">
+                    <h3 className="text-lg font-bold text-foreground leading-snug line-clamp-1">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 flex-1">
+                      {product.description}
+                    </p>
+
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-border">
+                      <div>
+                        <span className="block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                          Precio
+                        </span>
+                        <span className="inline-block mt-0.5 px-2.5 py-1 rounded-lg bg-accent-100 text-accent-800 text-xl font-black tabular-nums">
+                          {product.formattedPrice}
+                        </span>
+                      </div>
+
+                      {onSelectProduct && (
+                        <button
+                          onClick={() => onSelectProduct(product)}
+                          tabIndex={visible ? 0 : -1}
+                          aria-label={`Ver detalle de ${product.name}`}
+                          className="btn btn-primary btn-sm px-3.5 py-2"
+                        >
+                          <span>Ver detalle</span>
+                          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Controles */}
+      {pageCount > 1 && (
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2" aria-label="Seleccionar posición del carrusel">
+            {Array.from({ length: pageCount }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                aria-label={`Ir a la posición ${idx + 1} de ${pageCount}`}
+                aria-current={idx === currentIndex ? "true" : undefined}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  idx === currentIndex ? "w-8 bg-primary" : "w-2.5 bg-input hover:bg-secondary-300"
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={prevSlide}
+              aria-label="Productos anteriores"
+              className="p-2.5 rounded-full border border-border bg-surface text-secondary-900 shadow-card hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95"
+            >
+              <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+            </button>
+            <button
+              onClick={nextSlide}
+              aria-label="Productos siguientes"
+              className="p-2.5 rounded-full border border-border bg-surface text-secondary-900 shadow-card hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95"
+            >
+              <ChevronRight className="w-5 h-5" aria-hidden="true" />
+            </button>
           </div>
         </div>
-      </div>
-
-      {/* Navigation Controls */}
-      <button
-        onClick={prevSlide}
-        aria-label="Producto anterior"
-        className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/10 backdrop-blur-md transition-all hover:scale-110 active:scale-95"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-
-      <button
-        onClick={nextSlide}
-        aria-label="Siguiente producto"
-        className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/10 backdrop-blur-md transition-all hover:scale-110 active:scale-95"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
-
-      {/* Indicator Dots */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
-        {products.map((p, idx) => (
-          <button
-            key={p.id || idx}
-            onClick={() => setCurrentIndex(idx)}
-            aria-label={`Ir a producto ${idx + 1}`}
-            className={`transition-all duration-300 rounded-full ${
-              idx === currentIndex
-                ? "w-8 h-2.5 bg-blue-400"
-                : "w-2.5 h-2.5 bg-white/30 hover:bg-white/60"
-            }`}
-          />
-        ))}
-      </div>
+      )}
     </div>
   );
 };

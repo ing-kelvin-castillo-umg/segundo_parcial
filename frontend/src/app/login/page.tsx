@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Loader2,
   ChevronLeft,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -60,129 +62,144 @@ export default function LoginPage() {
     setError(null);
   };
 
-  return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 bg-slate-950 text-slate-100 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 -left-32 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+  const NoticeIcon = notice === "Sesión cerrada por inactividad" ? Clock : AlertTriangle;
 
-      {/* Back to Home Link */}
-      <div className="w-full max-w-md mb-6">
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-10 sm:px-6 lg:px-8 bg-gradient-to-br from-secondary-950 via-secondary-900 to-primary-900 relative overflow-hidden">
+      {/* Decoración */}
+      <div className="absolute top-1/4 -left-32 w-80 h-80 bg-primary-500/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-accent-500/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+
+      {/* Volver */}
+      <div className="relative w-full max-w-md mb-5">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 px-2 py-1 -ml-2 rounded-lg text-xs font-semibold text-secondary-100 hover:text-white hover:bg-white/10 transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           <span>Volver al Inicio</span>
         </Link>
       </div>
 
-      {/* Login Card */}
-      <div className="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-        {/* Header */}
+      {/* Tarjeta */}
+      <main className="relative w-full max-w-md bg-surface text-foreground rounded-3xl p-6 sm:p-8 shadow-2xl shadow-secondary-950/40 space-y-6 animate-scale-in">
+        {/* Encabezado */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-500/25">
-            <Package className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center mx-auto shadow-lg shadow-primary-700/30">
+            <Package className="w-6 h-6" aria-hidden="true" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">Iniciar Sesión</h2>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-2xl font-black tracking-tight text-foreground">Iniciar Sesión</h1>
+          <p className="text-sm text-muted-foreground">
             Ingresa con tu cuenta para acceder a la gestión de productos
           </p>
         </div>
 
-        {/* Quick Fill Credentials Buttons (Ideal for evaluation!) */}
-        <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Acceso Rápido para Pruebas:
+        {/* Aviso de sesión cerrada (inactividad / expiración) */}
+        {notice && !error && (
+          <div
+            role="status"
+            className="p-3.5 rounded-xl border border-warning-200 bg-warning-50 text-sm font-semibold text-warning-800 flex items-center gap-2.5 animate-slide-down"
+          >
+            <NoticeIcon className="w-5 h-5 shrink-0 text-warning-700" aria-hidden="true" />
+            <span>{notice}</span>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div
+            role="alert"
+            className="p-3.5 rounded-xl border border-danger-200 bg-danger-50 text-sm text-danger-800 flex items-center gap-2.5 animate-slide-down"
+          >
+            <AlertCircle className="w-5 h-5 shrink-0 text-danger-700" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Acceso rápido */}
+        <div className="p-3.5 rounded-2xl bg-muted border border-border space-y-2">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+            Acceso rápido para pruebas
           </span>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => fillCredentials("admin", "admin123")}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all hover:scale-[1.02]"
+              className="btn btn-sm py-2 bg-accent-100 text-accent-800 border border-accent-200 hover:bg-accent-200"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Rol Admin</span>
             </button>
             <button
               type="button"
               onClick={() => fillCredentials("user", "user123")}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-all hover:scale-[1.02]"
+              className="btn btn-sm py-2 bg-primary-50 text-primary-800 border border-primary-200 hover:bg-primary-100"
             >
-              <UserIcon className="w-3.5 h-3.5" />
+              <UserIcon className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Rol Usuario</span>
             </button>
           </div>
         </div>
 
-        {/* Session Expired Notice */}
-        {notice && !error && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{notice}</span>
-          </div>
-        )}
-
-        {/* Error Notification */}
-        {error && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Form */}
+        {/* Formulario */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
+            <label htmlFor="username" className="label">
               Usuario
             </label>
             <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <UserIcon className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               <input
+                id="username"
                 type="text"
+                autoComplete="username"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin o user"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="input pl-10"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">
+            <label htmlFor="password" className="label">
               Contraseña
             </label>
             <div className="relative">
-              <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <KeyRound className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               <input
+                id="password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="input pl-10"
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className="btn btn-primary w-full py-3">
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                <span>Verificando...</span>
+              </>
             ) : (
               <>
                 <span>Entrar al Sistema</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </>
             )}
           </button>
         </form>
-      </div>
+      </main>
+
+      <p className="relative mt-6 text-xs text-secondary-200">
+        Universidad Mariano Gálvez de Guatemala · Segundo Parcial
+      </p>
     </div>
   );
 }

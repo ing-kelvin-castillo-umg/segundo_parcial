@@ -2,39 +2,233 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------------------------------------- */
+/*  Tokens de color (canales RGB para poder usar opacidad: bg-primary/10)     */
+/* -------------------------------------------------------------------------- */
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
-  --background-end-rgb: 255, 255, 255;
+  /* Primario · verde azulado profundo (teal) */
+  --color-primary-50: 240 253 250;   /* #F0FDFA */
+  --color-primary-100: 204 251 241;  /* #CCFBF1 */
+  --color-primary-200: 153 246 228;  /* #99F6E4 */
+  --color-primary-300: 94 234 212;   /* #5EEAD4 */
+  --color-primary-400: 45 212 191;   /* #2DD4BF */
+  --color-primary-500: 20 184 166;   /* #14B8A6 */
+  --color-primary-600: 13 148 136;   /* #0D9488 */
+  --color-primary-700: 15 118 110;   /* #0F766E  ← principal */
+  --color-primary-800: 17 94 89;     /* #115E59 */
+  --color-primary-900: 19 78 74;     /* #134E4A */
+  --color-primary: var(--color-primary-700);
+  --color-primary-foreground: 255 255 255;
+
+  /* Secundario · azul petróleo oscuro (sidebar, hero) */
+  --color-secondary-50: 238 246 250;  /* #EEF6FA */
+  --color-secondary-100: 213 232 241; /* #D5E8F1 */
+  --color-secondary-200: 169 207 224; /* #A9CFE0 */
+  --color-secondary-300: 116 174 200; /* #74AEC8 */
+  --color-secondary-400: 70 139 170;  /* #468BAA */
+  --color-secondary-500: 44 110 140;  /* #2C6E8C */
+  --color-secondary-600: 31 85 112;   /* #1F5570 */
+  --color-secondary-700: 22 66 89;    /* #164259 */
+  --color-secondary-800: 15 52 72;    /* #0F3448 */
+  --color-secondary-900: 11 42 60;    /* #0B2A3C  ← principal */
+  --color-secondary-950: 7 28 41;     /* #071C29 */
+  --color-secondary: var(--color-secondary-900);
+  --color-secondary-foreground: 255 255 255;
+
+  /* Acento · ámbar (CTA y destacados). Texto oscuro encima: el blanco no alcanza AA */
+  --color-accent-50: 255 251 235;  /* #FFFBEB */
+  --color-accent-100: 254 243 199; /* #FEF3C7 */
+  --color-accent-200: 253 230 138; /* #FDE68A */
+  --color-accent-300: 252 211 77;  /* #FCD34D */
+  --color-accent-400: 251 191 36;  /* #FBBF24 */
+  --color-accent-500: 245 158 11;  /* #F59E0B  ← principal */
+  --color-accent-600: 217 119 6;   /* #D97706 */
+  --color-accent-700: 180 83 9;    /* #B45309 */
+  --color-accent-800: 146 64 14;   /* #92400E */
+  --color-accent-900: 120 53 15;   /* #78350F */
+  --color-accent: var(--color-accent-500);
+  --color-accent-foreground: var(--color-secondary-900);
+
+  /* Estados */
+  --color-success-50: 236 253 245;  /* #ECFDF5 */
+  --color-success-100: 209 250 229; /* #D1FAE5 */
+  --color-success-200: 167 243 208; /* #A7F3D0 */
+  --color-success-500: 16 185 129;  /* #10B981 */
+  --color-success-600: 5 150 105;   /* #059669 */
+  --color-success-700: 4 120 87;    /* #047857  ← principal */
+  --color-success-800: 6 95 70;     /* #065F46 */
+  --color-success: var(--color-success-700);
+  --color-success-foreground: 255 255 255;
+
+  --color-warning-50: 255 251 235;  /* #FFFBEB */
+  --color-warning-100: 254 243 199; /* #FEF3C7 */
+  --color-warning-200: 253 230 138; /* #FDE68A */
+  --color-warning-500: 245 158 11;  /* #F59E0B */
+  --color-warning-600: 217 119 6;   /* #D97706 */
+  --color-warning-700: 180 83 9;    /* #B45309  ← principal */
+  --color-warning-800: 146 64 14;   /* #92400E */
+  --color-warning: var(--color-warning-700);
+  --color-warning-foreground: 255 255 255;
+
+  --color-danger-50: 254 242 242;  /* #FEF2F2 */
+  --color-danger-100: 254 226 226; /* #FEE2E2 */
+  --color-danger-200: 254 202 202; /* #FECACA */
+  --color-danger-500: 239 68 68;   /* #EF4444 */
+  --color-danger-600: 220 38 38;   /* #DC2626 */
+  --color-danger-700: 185 28 28;   /* #B91C1C  ← principal */
+  --color-danger-800: 153 27 27;   /* #991B1B */
+  --color-danger: var(--color-danger-700);
+  --color-danger-foreground: 255 255 255;
+
+  /* Neutros (slate) */
+  --color-background: 244 247 249;      /* #F4F7F9 fondo de la app */
+  --color-surface: 255 255 255;         /* #FFFFFF tarjetas, modales */
+  --color-foreground: 15 23 42;         /* #0F172A texto principal */
+  --color-muted: 241 245 249;           /* #F1F5F9 superficies secundarias */
+  --color-muted-foreground: 71 85 105;  /* #475569 texto secundario (7.6:1) */
+  --color-border: 226 232 240;          /* #E2E8F0 bordes */
+  --color-input: 203 213 225;           /* #CBD5E1 borde de campos */
+  --color-ring: var(--color-primary-600); /* #0D9488 anillo de foco */
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* -------------------------------------------------------------------------- */
+/*  Base                                                                      */
+/* -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* Foco visible y consistente para navegación con teclado */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-surface;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-primary-900;
+  }
 }
 
-/* Custom scrollbar */
+/* -------------------------------------------------------------------------- */
+/*  Componentes reutilizables                                                 */
+/* -------------------------------------------------------------------------- */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+      transition-all duration-150 select-none
+      focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+      active:scale-[0.98]
+      disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-lg;
+  }
+  .btn-primary {
+    @apply bg-primary text-primary-foreground shadow-sm hover:bg-primary-800 hover:shadow-md;
+  }
+  .btn-accent {
+    @apply bg-accent text-accent-foreground shadow-sm hover:bg-accent-400 hover:shadow-md;
+  }
+  .btn-secondary {
+    @apply border border-input bg-surface text-foreground shadow-sm hover:bg-muted hover:border-secondary-300;
+  }
+  .btn-ghost {
+    @apply text-muted-foreground hover:bg-muted hover:text-foreground;
+  }
+  .btn-danger {
+    @apply bg-danger text-danger-foreground shadow-sm hover:bg-danger-800 hover:shadow-md;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-input bg-surface px-3.5 py-2.5 text-sm text-foreground
+      placeholder:text-muted-foreground/70 shadow-sm transition-colors
+      hover:border-secondary-300
+      focus:outline-none focus:border-primary-600 focus:ring-2 focus:ring-primary-600/25
+      disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-surface shadow-card;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .badge-success {
+    @apply border-success-200 bg-success-50 text-success-800;
+  }
+  .badge-warning {
+    @apply border-warning-200 bg-warning-50 text-warning-800;
+  }
+  .badge-danger {
+    @apply border-danger-200 bg-danger-50 text-danger-800;
+  }
+  .badge-neutral {
+    @apply border-border bg-muted text-muted-foreground;
+  }
+  .badge-primary {
+    @apply border-primary-200 bg-primary-50 text-primary-800;
+  }
+
+  /* Tooltip CSS: el elemento con .tooltip-trigger muestra su hijo .tooltip al hover/foco */
+  .tooltip-trigger {
+    @apply relative;
+  }
+  .tooltip {
+    @apply pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 -translate-x-1/2 translate-y-1
+      whitespace-nowrap rounded-md bg-secondary-900 px-2 py-1 text-[11px] font-medium text-white
+      opacity-0 shadow-lg transition-all duration-150;
+  }
+  .tooltip-below {
+    @apply bottom-auto top-full mb-0 mt-2 -translate-y-1;
+  }
+  .tooltip-trigger:hover .tooltip,
+  .tooltip-trigger:focus-visible .tooltip {
+    @apply translate-y-0 opacity-100;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Scrollbar y accesibilidad de movimiento                                   */
+/* -------------------------------------------------------------------------- */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: rgb(var(--color-muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgb(var(--color-input));
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgb(var(--color-secondary-300));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
