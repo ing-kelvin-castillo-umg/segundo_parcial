@@ -13,6 +13,15 @@ public class AuthResponse {
     @Schema(description = "Tipo de token", example = "Bearer")
     private String type = "Bearer";
 
+    @Schema(description = "Refresh token para renovar el access token (rota en cada uso)")
+    private String refreshToken;
+
+    @Schema(description = "Vigencia del access token en segundos", example = "300")
+    private long expiresIn;
+
+    @Schema(description = "Vigencia del refresh token en segundos", example = "604800")
+    private long refreshExpiresIn;
+
     @Schema(description = "Nombre de usuario", example = "admin")
     private String username;
 
@@ -42,6 +51,30 @@ public class AuthResponse {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public long getExpiresIn() {
+        return expiresIn;
+    }
+
+    public void setExpiresIn(long expiresIn) {
+        this.expiresIn = expiresIn;
+    }
+
+    public long getRefreshExpiresIn() {
+        return refreshExpiresIn;
+    }
+
+    public void setRefreshExpiresIn(long refreshExpiresIn) {
+        this.refreshExpiresIn = refreshExpiresIn;
     }
 
     public String getType() {

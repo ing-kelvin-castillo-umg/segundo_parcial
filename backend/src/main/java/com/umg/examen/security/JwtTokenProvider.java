@@ -24,7 +24,7 @@ public class JwtTokenProvider {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration-ms:86400000}")
+    @Value("${app.jwt.expiration-ms:300000}")
     private long jwtExpirationMs;
 
     private SecretKey getSigningKey() {
@@ -70,6 +70,22 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public long getExpirationMs() {
+        return jwtExpirationMs;
+    }
+
+    /** true solo si el token es auténtico pero su fecha de expiración ya pasó. */
+    public boolean isTokenExpired(String authToken) {
+        try {
+            Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(authToken);
+            return false;
+        } catch (ExpiredJwtException e) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean validateToken(String authToken) {

@@ -22,11 +22,17 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    }
+  /**
+   * Cierra la sesión local de inmediato y revoca el refresh token en el backend (vía BFF).
+   * Si la revocación falla, la sesión local igualmente queda cerrada.
+   */
+  static logout(): Promise<void> {
+    if (typeof window === "undefined") return Promise.resolve();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    return fetch("/api/auth/logout", { method: "POST", keepalive: true })
+      .then(() => undefined)
+      .catch(() => undefined);
   }
 
   static getStoredSession(): AuthSession | null {

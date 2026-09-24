@@ -1,19 +1,30 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
+import { TokenManager } from "./token.manager";
 
 // Todas las llamadas usan rutas relativas de Next.js (BFF); la URL del backend nunca llega al navegador.
 const API_BASE_URL = "";
 
+// Endpoints de autenticación: no llevan token ni disparan renovación automática.
+const AUTH_ENDPOINTS = ["/api/auth/login", "/api/auth/refresh", "/api/auth/logout"];
+
 export class ApiClient {
   private static getToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("token");
-    }
-    return null;
+    return TokenManager.getToken();
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
-    const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
-    const token = this.getToken();
+  static async request<T>(endpoint: string, options: RequestInit = {}, retried = false): Promise<ApiResponseDto<T>> {
+    const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE_URL}${path}`;
+    const isAuthEndpoint = AUTH_ENDPOINTS.some((e) => path.startsWith(e));
+
+    let token = this.getToken();
+
+    // Renovación preventiva: el access token ya venció o está por vencer.
+    if (token && !isAuthEndpoint && TokenManager.isExpiring(token)) {
+      const result = await TokenManager.refresh(token);
+      // "expired": la sesión terminó (el dashboard redirige al login); la solicitud sigue sin token.
+      token = result === "expired" ? null : this.getToken();
+    }
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -32,6 +43,20 @@ export class ApiClient {
       });
 
       const data = await response.json();
+
+      // Renovación reactiva: el backend rechazó el token por expirado. Se reintenta una sola vez.
+      if (response.status === 401 && token && !isAuthEndpoint && !retried) {
+        const expired = data?.code === "TOKEN_EXPIRED" || TokenManager.isExpiring(token);
+        if (expired) {
+          const result = await TokenManager.refresh(token);
+          if (result === "refreshed") {
+            return this.request<T>(endpoint, options, true);
+          }
+          if (result === "expired") {
+            throw new Error("Tu sesión expiró. Inicia sesión nuevamente.");
+          }
+        }
+      }
 
       if (!response.ok) {
         const errorMsg = data?.message || `Error HTTP ${response.status}: ${response.statusText}`;

@@ -31,6 +31,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         body.put("error", "Unauthorized");
         body.put("message", "Acceso denegado: Se requiere autenticación válida o token JWT no proporcionado");
         body.put("path", request.getServletPath());
+        if (Boolean.TRUE.equals(request.getAttribute(JwtAuthenticationFilter.EXPIRED_ATTRIBUTE))) {
+            body.put("code", "TOKEN_EXPIRED");
+            body.put("message", "El token de acceso expiró; renueva la sesión con el refresh token");
+        }
 
         objectMapper.writeValue(response.getOutputStream(), body);
     }

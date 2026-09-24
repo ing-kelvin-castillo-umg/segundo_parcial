@@ -23,6 +23,27 @@ function errorResponse(status: number, message: string) {
   return NextResponse.json({ success: false, message, data: null }, { status });
 }
 
+/**
+ * Llamada directa al backend desde los Route Handlers de autenticación (login/refresh/logout).
+ * Devuelve null si el backend no responde.
+ */
+export async function backendFetch(path: string, init: { method: string; body?: string; accept?: string }): Promise<Response | null> {
+  try {
+    return await fetch(`${BACKEND_URL}${path}`, {
+      method: init.method,
+      headers: { "content-type": "application/json", accept: init.accept ?? "application/json" },
+      body: init.body,
+      redirect: "manual",
+      cache: "no-store",
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export { errorResponse };
+
 /** Normaliza y valida la ruta pedida; devuelve null si no está permitida. */
 function resolveBackendPath(segments: string[]): string | null {
   if (segments.length === 0) return null;

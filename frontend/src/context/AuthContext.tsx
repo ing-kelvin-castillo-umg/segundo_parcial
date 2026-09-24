@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@/entities/user.entity";
+import { AuthSession, User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
+import { SESSION_CLEARED_EVENT, TOKEN_KEY, TOKEN_REFRESHED_EVENT } from "@/services/token.manager";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -30,6 +31,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(session.token);
     }
     setLoading(false);
+  }, []);
+
+  // Sincroniza el estado con la renovación de tokens y con la sesión abierta en otras pestañas.
+  useEffect(() => {
+    const onRefreshed = (e: Event) => {
+      const session = (e as CustomEvent<AuthSession>).detail;
+      setUser(session.user);
+      setToken(session.token);
+    };
+    // Refresh token vencido/revocado: se limpia el estado y el dashboard redirige al login.
+    const onSessionCleared = () => {
+      setUser(null);
+      setToken(null);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== TOKEN_KEY) return;
+      const session = AuthService.getStoredSession();
+      setUser(session ? session.user : null);
+      setToken(session ? session.token : null);
+    };
+
+    window.addEventListener(TOKEN_REFRESHED_EVENT, onRefreshed);
+    window.addEventListener(SESSION_CLEARED_EVENT, onSessionCleared);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(TOKEN_REFRESHED_EVENT, onRefreshed);
+      window.removeEventListener(SESSION_CLEARED_EVENT, onSessionCleared);
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   const login = async (username: string, password: string) => {

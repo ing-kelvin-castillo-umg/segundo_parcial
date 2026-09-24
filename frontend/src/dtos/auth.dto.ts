@@ -6,6 +6,8 @@ export interface LoginRequestDto {
 export interface AuthResponseDto {
   token: string;
   type: string;
+  /** Vigencia del access token en segundos. El refresh token nunca llega al JS: viaja en una cookie httpOnly. */
+  expiresIn?: number;
   username: string;
   fullName: string;
   email: string;

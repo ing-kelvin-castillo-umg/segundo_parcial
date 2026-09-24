@@ -19,6 +19,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    public static final String EXPIRED_ATTRIBUTE = "jwt.expired";
+
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtTokenProvider tokenProvider;
@@ -45,6 +47,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else if (StringUtils.hasText(jwt) && tokenProvider.isTokenExpired(jwt)) {
+                // Permite al entry point indicar al cliente que debe renovar el token (y no que le falten permisos)
+                request.setAttribute(EXPIRED_ATTRIBUTE, Boolean.TRUE);
             }
         } catch (Exception ex) {
             log.error("No se pudo establecer la autenticación en el contexto de seguridad", ex);
