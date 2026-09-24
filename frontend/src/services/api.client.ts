@@ -1,7 +1,5 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 export class ApiClient {
   private static getToken(): string | null {
     if (typeof window !== "undefined") {
@@ -11,51 +9,61 @@ export class ApiClient {
   }
 
   static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
-    const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    const url = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const token = this.getToken();
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(options.headers as Record<string, string>),
-    };
+    const headers = new Headers(options.headers);
+    headers.set("Accept", "application/json");
+    if (options.body && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
 
     if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+      headers.set("Authorization", `Bearer ${token}`);
     }
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+    const responseText = await response.text();
+    let data: unknown = null;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = data?.message || `Error HTTP ${response.status}: ${response.statusText}`;
-        throw new Error(errorMsg);
+    if (responseText) {
+      try {
+        data = JSON.parse(responseText) as unknown;
+      } catch {
+        data = null;
       }
-
-      return data as ApiResponseDto<T>;
-    } catch (error: any) {
-      console.error(`[API ERROR] ${options.method || "GET"} ${url}:`, error.message);
-      throw error;
     }
+
+    if (!response.ok) {
+      const errorMessage =
+        typeof data === "object" && data !== null && "message" in data && typeof data.message === "string"
+          ? data.message
+          : `Error HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    if (!responseText) {
+      return { success: true, message: "", data: undefined as T };
+    }
+
+    return data as ApiResponseDto<T>;
   }
 
   static get<T>(endpoint: string): Promise<ApiResponseDto<T>> {
     return this.request<T>(endpoint, { method: "GET" });
   }
 
-  static post<T>(endpoint: string, body: any): Promise<ApiResponseDto<T>> {
+  static post<T>(endpoint: string, body: unknown): Promise<ApiResponseDto<T>> {
     return this.request<T>(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
     });
   }
 
-  static put<T>(endpoint: string, body: any): Promise<ApiResponseDto<T>> {
+  static put<T>(endpoint: string, body: unknown): Promise<ApiResponseDto<T>> {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: JSON.stringify(body),

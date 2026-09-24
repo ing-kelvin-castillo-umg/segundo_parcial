@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Database,
   Layers,
-  Code2,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -113,24 +112,13 @@ export default function HomePage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition-all hover:scale-105"
-                >
-                  <span>Iniciar Sesión</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <a
-                  href="http://localhost:8080/swagger-ui/index.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium text-sm transition-all"
-                >
-                  <Code2 className="w-4 h-4" />
-                  <span>Documentación Swagger API</span>
-                </a>
-              </>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition-all hover:scale-105"
+              >
+                <span>Iniciar Sesión</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             )}
           </div>
         </section>
