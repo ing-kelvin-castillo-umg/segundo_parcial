@@ -1,6 +1,22 @@
 import { ApiResponseDto } from "@/dtos/auth.dto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+/**
+ * Todas las peticiones del navegador viajan a rutas relativas de Next.js
+ * (/api/...). Son los Route Handlers quienes reenvían al backend, de modo que la
+ * dirección real del servicio nunca se expone al cliente.
+ */
+const API_BASE_URL = "";
+
+/** Error de API que conserva el código HTTP original devuelto por la pasarela. */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
 
 export class ApiClient {
   private static getToken(): string | null {
@@ -30,14 +46,16 @@ export class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      // Las respuestas 204 y las que llegan sin cuerpo no se pueden parsear.
+      const raw = await response.text();
+      const data = raw ? JSON.parse(raw) : null;
 
       if (!response.ok) {
         const errorMsg = data?.message || `Error HTTP ${response.status}: ${response.statusText}`;
-        throw new Error(errorMsg);
+        throw new ApiError(errorMsg, response.status);
       }
 
-      return data as ApiResponseDto<T>;
+      return (data ?? { success: true, message: "", data: null }) as ApiResponseDto<T>;
     } catch (error: any) {
       console.error(`[API ERROR] ${options.method || "GET"} ${url}:`, error.message);
       throw error;

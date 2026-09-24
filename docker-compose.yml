@@ -48,12 +48,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080
     container_name: examen_frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      # URL interna del backend: solo la conoce el servidor de Next.js (BFF).
+      # Al no llevar el prefijo NEXT_PUBLIC_ nunca se incrusta en el bundle del navegador.
+      BACKEND_INTERNAL_URL: http://backend:8080
     ports:
       - "3000:3000"
     depends_on:
