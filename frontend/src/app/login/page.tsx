@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -11,11 +11,12 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertCircle,
+  Clock,
   Loader2,
   ChevronLeft,
 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,16 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Motivo por el que el usuario fue devuelto a esta pantalla.
+  const reason = searchParams.get("reason");
+  const sessionNotice =
+    reason === "inactivity"
+      ? "Sesión cerrada por inactividad"
+      : reason === "expired"
+      ? "Tu sesión expiró. Vuelve a iniciar sesión para continuar."
+      : null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +115,14 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Aviso de sesión finalizada (inactividad o token vencido) */}
+        {sessionNotice && !error && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+            <Clock className="w-4 h-4 shrink-0" />
+            <span>{sessionNotice}</span>
+          </div>
+        )}
+
         {/* Error Notification */}
         {error && (
           <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
@@ -165,5 +184,23 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+/**
+ * useSearchParams obliga a renderizar en cliente; el Suspense evita que el
+ * prerenderizado estático de Next.js falle durante la compilación.
+ */
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

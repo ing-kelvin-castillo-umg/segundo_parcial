@@ -1,6 +1,7 @@
 package com.umg.examen.controller;
 
 import com.umg.examen.dto.request.LoginRequest;
+import com.umg.examen.dto.request.LogoutRequest;
 import com.umg.examen.dto.request.RefreshTokenRequest;
 import com.umg.examen.dto.response.ApiResponse;
 import com.umg.examen.dto.response.AuthResponse;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +43,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Token de acceso renovado", refreshed));
     }
 
+    @PostMapping("/logout")
+    @Operation(summary = "Cerrar sesión",
+            description = "Invalida el refresh token y añade el access token a la lista de revocación. " +
+                    "Se acepta incluso con un access token vencido, ya que el cierre puede dispararse tras un periodo de inactividad.")
+    public ResponseEntity<ApiResponse<String>> logout(@RequestBody(required = false) LogoutRequest request,
+                                                      HttpServletRequest httpRequest) {
+        String accessToken = extractBearerToken(httpRequest);
+        String refreshToken = request != null ? request.getRefreshToken() : null;
+        String reason = request != null ? request.getReason() : null;
+
+        authService.logout(accessToken, refreshToken, reason);
+        return ResponseEntity.ok(ApiResponse.success("Sesión cerrada correctamente", null));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")
@@ -50,5 +66,14 @@ public class AuthController {
         }
         UserResponse user = authService.getCurrentUser(authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Perfil de usuario obtenido", user));
+    }
+
+    /** Extrae el token del encabezado Authorization, si viene presente. */
+    private String extractBearerToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
     }
 }

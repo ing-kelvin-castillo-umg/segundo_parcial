@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { User } from "@/entities/user.entity";
-import { AuthService } from "@/services/auth.service";
+import { AuthService, LogoutReason } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -12,7 +12,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: LogoutReason) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,12 +38,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
-    setUser(null);
-    setToken(null);
-    router.push("/");
-  };
+  /**
+   * Cierre de sesión centralizado. Notifica al backend, limpia el estado y el
+   * almacenamiento local y redirige según el motivo: si fue por inactividad se
+   * envía al usuario al login con el aviso correspondiente.
+   */
+  const logout = useCallback(
+    async (reason: LogoutReason = "manual") => {
+      await AuthService.logout(reason);
+      setUser(null);
+      setToken(null);
+
+      if (reason === "inactivity") {
+        router.replace("/login?reason=inactivity");
+      } else {
+        router.push("/");
+      }
+    },
+    [router]
+  );
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
   const isAuthenticated = !!token && !!user;

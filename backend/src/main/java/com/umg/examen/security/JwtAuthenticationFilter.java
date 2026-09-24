@@ -1,5 +1,6 @@
 package com.umg.examen.security;
 
+import com.umg.examen.repository.RevokedAccessTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,10 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final RevokedAccessTokenRepository revokedAccessTokenRepository;
 
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
+                                   CustomUserDetailsService userDetailsService,
+                                   RevokedAccessTokenRepository revokedAccessTokenRepository) {
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
+        this.revokedAccessTokenRepository = revokedAccessTokenRepository;
     }
 
     @Override
@@ -37,6 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+                // Un token con firma válida todavía puede haber sido revocado al
+                // cerrar la sesión (manual o por inactividad): se verifica su jti.
+                if (isRevoked(jwt)) {
+                    log.debug("Petición rechazada: el token de acceso fue revocado");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 String username = tokenProvider.getUsernameFromJwt(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -51,6 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isRevoked(String jwt) {
+        String jti = tokenProvider.getJtiFromJwt(jwt);
+        return jti != null && revokedAccessTokenRepository.existsByJti(jti);
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

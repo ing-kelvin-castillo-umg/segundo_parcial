@@ -3,6 +3,9 @@ import { AuthSession, User } from "@/entities/user.entity";
 import { AuthMapper } from "@/mappers/auth.mapper";
 import { ApiClient } from "./api.client";
 
+/** Motivo por el que se cierra la sesión. */
+export type LogoutReason = "manual" | "inactivity";
+
 export class AuthService {
   static async login(credentials: { username: string; password: string }): Promise<AuthSession> {
     const dto = AuthMapper.toLoginDto(credentials);
@@ -22,8 +25,29 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
+  /**
+   * Cierra la sesión de forma centralizada: primero avisa al backend para que
+   * invalide el access token y revoque el refresh token, y después limpia el
+   * almacenamiento local. Si la notificación falla, la limpieza igual se realiza.
+   */
+  static async logout(reason: LogoutReason = "manual"): Promise<void> {
+    if (typeof window === "undefined") return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ reason }),
+      });
+    } catch (error) {
+      console.error("[AUTH] No se pudo notificar el cierre de sesión al backend:", error);
+    } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     }

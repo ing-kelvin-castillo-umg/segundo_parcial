@@ -5,10 +5,12 @@ import com.umg.examen.dto.response.AuthResponse;
 import com.umg.examen.dto.response.TokenRefreshResponse;
 import com.umg.examen.dto.response.UserResponse;
 import com.umg.examen.entity.RefreshToken;
+import com.umg.examen.entity.RevokedAccessToken;
 import com.umg.examen.entity.Role;
 import com.umg.examen.entity.User;
 import com.umg.examen.mapper.UserMapper;
 import com.umg.examen.repository.RefreshTokenRepository;
+import com.umg.examen.repository.RevokedAccessTokenRepository;
 import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.JwtTokenProvider;
 import com.umg.examen.service.AuthService;
@@ -22,6 +24,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.jsonwebtoken.Claims;
+
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,17 +39,20 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RevokedAccessTokenRepository revokedAccessTokenRepository;
     private final UserMapper userMapper;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtTokenProvider tokenProvider,
                            UserRepository userRepository,
                            RefreshTokenRepository refreshTokenRepository,
+                           RevokedAccessTokenRepository revokedAccessTokenRepository,
                            UserMapper userMapper) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.revokedAccessTokenRepository = revokedAccessTokenRepository;
         this.userMapper = userMapper;
     }
 
@@ -104,6 +112,43 @@ public class AuthServiceImpl implements AuthService {
         log.info("Credenciales renovadas para el usuario '{}'", user.getUsername());
 
         return new TokenRefreshResponse(newAccessToken, newRefreshToken, tokenProvider.getJwtExpirationMs());
+    }
+
+    @Override
+    @Transactional
+    public void logout(String accessToken, String refreshToken, String reason) {
+        String username = null;
+
+        // Revocar el refresh token deja la sesión inservible de inmediato.
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenRepository.findByToken(refreshToken).ifPresent(stored -> {
+                stored.setRevoked(true);
+                refreshTokenRepository.save(stored);
+            });
+        }
+
+        // El access token puede haber vencido ya cuando se dispara el cierre por
+        // inactividad; aun así se lee su jti para inscribirlo en la lista negra.
+        if (accessToken != null && !accessToken.isBlank()) {
+            try {
+                Claims claims = tokenProvider.parseClaimsIgnoringExpiration(accessToken);
+                String jti = claims.getId();
+                username = claims.getSubject();
+
+                if (jti != null && !revokedAccessTokenRepository.existsByJti(jti)) {
+                    Instant expiresAt = claims.getExpiration() != null
+                            ? claims.getExpiration().toInstant()
+                            : Instant.now();
+                    revokedAccessTokenRepository.save(new RevokedAccessToken(jti, username, expiresAt));
+                }
+            } catch (Exception ex) {
+                // Un token ilegible o manipulado no impide cerrar la sesión.
+                log.warn("No fue posible interpretar el access token durante el cierre de sesión: {}", ex.getMessage());
+            }
+        }
+
+        log.info("Sesión cerrada para '{}' (motivo: {})", username != null ? username : "desconocido",
+                reason != null ? reason : "manual");
     }
 
     private String issueRefreshToken(User user) {
