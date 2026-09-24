@@ -45,20 +45,21 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white shadow-2xl border border-slate-800"
+      className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-aurora-panel via-[#17243b] to-[#251b42] text-white shadow-2xl shadow-black/30 border border-brand-300/20"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Decorative background glow */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-aurora-violet/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-brand-400/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-300/70 to-transparent" />
 
       {/* Slide Content */}
       <div className="relative min-h-[420px] sm:min-h-[460px] grid grid-cols-1 lg:grid-cols-12 items-center p-6 sm:p-10 gap-8">
         {/* Text Info (Left) */}
         <div className="lg:col-span-6 flex flex-col justify-center space-y-4 z-10">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-400/15 text-brand-200 border border-brand-300/30 backdrop-blur-sm">
               <Tag className="w-3.5 h-3.5" />
               {currentProduct.category}
             </span>
@@ -84,7 +85,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
           </p>
 
           <div className="pt-2 flex items-baseline gap-3">
-            <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300">
+            <span className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-300 via-aurora-cyan to-violet-300">
               {currentProduct.formattedPrice}
             </span>
             <span className="text-xs text-slate-400 uppercase tracking-wider">Precio sugerido</span>
@@ -94,7 +95,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
             <div className="pt-2">
               <button
                 onClick={() => onSelectProduct(currentProduct)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-aurora-violet hover:from-brand-400 hover:to-violet-500 text-white font-semibold text-sm shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
               >
                 <span>Ver Detalle del Producto</span>
               </button>
@@ -104,7 +105,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
 
         {/* Image Preview (Right) */}
         <div className="lg:col-span-6 flex items-center justify-center relative">
-          <div className="w-full max-w-md h-64 sm:h-80 relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
+          <div className="w-full max-w-md h-64 sm:h-80 relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30 border border-brand-200/20 group ring-1 ring-white/5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={currentProduct.imageUrl}
@@ -147,7 +148,7 @@ export const Carousel: React.FC<CarouselProps> = ({ products, onSelectProduct })
             aria-label={`Ir a producto ${idx + 1}`}
             className={`transition-all duration-300 rounded-full ${
               idx === currentIndex
-                ? "w-8 h-2.5 bg-blue-400"
+                ? "w-8 h-2.5 bg-brand-300"
                 : "w-2.5 h-2.5 bg-white/30 hover:bg-white/60"
             }`}
           />
