@@ -7,4 +7,5 @@ import com.umg.examen.dto.response.UserResponse;
 public interface AuthService {
     AuthResponse login(LoginRequest request);
     UserResponse getCurrentUser(String username);
+    AuthResponse refreshToken(com.umg.examen.dto.request.RefreshTokenRequest request);
 }

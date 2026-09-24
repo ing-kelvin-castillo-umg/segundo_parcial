@@ -31,6 +31,17 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Inicio de sesión exitoso", authResponse));
     }
 
+    @PostMapping("/refresh")
+    @Operation(summary = "Refrescar Token", description = "Obtiene un nuevo token de acceso usando el Refresh Token")
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@Valid @RequestBody com.umg.examen.dto.request.RefreshTokenRequest request) {
+        try {
+            AuthResponse authResponse = authService.refreshToken(request);
+            return ResponseEntity.ok(ApiResponse.success("Token refrescado exitosamente", authResponse));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")

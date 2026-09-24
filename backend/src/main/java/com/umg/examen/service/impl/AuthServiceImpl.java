@@ -43,11 +43,37 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = tokenProvider.generateToken(authentication);
+        String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + request.getUsername()));
 
-        return userMapper.toAuthResponse(user, token);
+        return userMapper.toAuthResponse(user, token, refreshToken);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResponse refreshToken(com.umg.examen.dto.request.RefreshTokenRequest request) {
+        String reqRefreshToken = request.getRefreshToken();
+        
+        if (!tokenProvider.validateToken(reqRefreshToken)) {
+            throw new RuntimeException("Refresh Token inválido o expirado");
+        }
+        
+        String username = tokenProvider.getUsernameFromJwt(reqRefreshToken);
+        
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+                
+        // Generar un nuevo token de acceso (y un nuevo refresh token si lo deseas)
+        java.util.List<String> roles = user.getRoles().stream()
+                .map(com.umg.examen.entity.Role::getName)
+                .collect(java.util.stream.Collectors.toList());
+                
+        String newToken = tokenProvider.generateTokenFromUsername(username, roles);
+        
+        // Reutilizamos el mismo refresh token (se podría generar uno nuevo también)
+        return userMapper.toAuthResponse(user, newToken, reqRefreshToken);
     }
 
     @Override

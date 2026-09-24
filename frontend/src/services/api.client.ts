@@ -25,10 +25,54 @@ export class ApiClient {
     }
 
     try {
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         ...options,
         headers,
       });
+
+      // Interceptor Logic for 401 Unauthorized
+      if (response.status === 401 && !url.includes('/api/auth/refresh')) {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (refreshToken) {
+          console.warn(`[Interceptado] 401 Unauthorized en ${url}. Intentando refrescar token...`);
+          try {
+            const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+              method: 'POST',
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ refreshToken })
+            });
+
+            if (refreshRes.ok) {
+              const refreshData = await refreshRes.json();
+              const newToken = refreshData.data.token;
+              const newRefreshToken = refreshData.data.refreshToken;
+              
+              localStorage.setItem("token", newToken);
+              localStorage.setItem("refreshToken", newRefreshToken);
+              
+              console.log("✅ [Éxito] Token JWT refrescado. Reintentando la petición original...");
+              
+              // Actualizar el header y reintentar
+              headers["Authorization"] = `Bearer ${newToken}`;
+              response = await fetch(url, {
+                ...options,
+                headers,
+              });
+            } else {
+              console.error("❌ [Fallo] Refresh token inválido o expirado. Redirigiendo a login...");
+              localStorage.removeItem("token");
+              localStorage.removeItem("refreshToken");
+              window.location.href = "/login";
+              throw new Error("Sesión expirada");
+            }
+          } catch (err) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            window.location.href = "/login";
+            throw err;
+          }
+        }
+      }
 
       const data = await response.json();
 
