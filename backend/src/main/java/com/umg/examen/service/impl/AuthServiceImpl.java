@@ -65,6 +65,11 @@ public class AuthServiceImpl implements AuthService {
                 .toList()));
     }
 
+    @Override
+    public void logout(String token) {
+        tokenProvider.revokeToken(token);
+    }
+
     private AuthResponse createTokenResponse(User user, String accessToken) {
         var roles = user.getRoles().stream().map(role -> role.getName()).toList();
         return userMapper.toAuthResponse(user, accessToken,

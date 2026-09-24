@@ -47,7 +47,7 @@ export const Navbar: React.FC = () => {
               </div>
 
               <button
-                onClick={logout}
+                onClick={() => void logout()}
                 title="Cerrar sesión"
                 className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >

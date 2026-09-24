@@ -14,10 +14,13 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
+    private final Set<String> revokedTokens = ConcurrentHashMap.newKeySet();
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
 
@@ -107,6 +110,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String authToken) {
         try {
+            if (revokedTokens.contains(authToken)) return false;
             Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
@@ -122,5 +126,9 @@ public class JwtTokenProvider {
             log.error("La cadena de claims JWT está vacía: {}", e.getMessage());
         }
         return false;
+    }
+
+    public void revokeToken(String token) {
+        revokedTokens.add(token);
     }
 }

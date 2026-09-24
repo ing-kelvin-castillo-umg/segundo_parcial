@@ -38,6 +38,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Token renovado exitosamente", authService.refresh(request)));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestHeader("Authorization") String authorization) {
+        authService.logout(authorization.replaceFirst("^Bearer\\s+", ""));
+        return ResponseEntity.ok(ApiResponse.success("Sesión cerrada", null));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")

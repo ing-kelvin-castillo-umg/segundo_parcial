@@ -12,7 +12,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: "inactivity") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,17 +32,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (!token) return;
+    const timeoutMs = 3 * 60 * 1000;
+    let timer: ReturnType<typeof setTimeout>;
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void logout("inactivity"), timeoutMs);
+    };
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
+    resetTimer();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [token]);
+
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
     setUser(session.user);
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
+  const logout = async (reason?: "inactivity") => {
+    await AuthService.logout();
     setUser(null);
     setToken(null);
-    router.push("/");
+    if (reason === "inactivity") sessionStorage.setItem("logoutMessage", "Sesión cerrada por inactividad");
+    router.push(reason === "inactivity" ? "/login" : "/");
   };
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));

@@ -23,8 +23,12 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
     if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${token}` } }).catch(() => undefined);
+      }
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
