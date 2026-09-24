@@ -106,3 +106,25 @@ export async function proxyRefresh(request: NextRequest): Promise<NextResponse> 
     );
   }
 }
+
+export async function proxyLogout(request: NextRequest): Promise<NextResponse> {
+  const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
+
+  try {
+    const backendResponse = await requestBackend(
+      request,
+      "/api/auth/logout",
+      JSON.stringify({ refreshToken }),
+    );
+    const response = await backendResponseToNextResponse(backendResponse);
+    clearRefreshCookie(response);
+    return response;
+  } catch {
+    const response = NextResponse.json(
+      { success: false, message: "No fue posible comunicarse con el servicio interno.", data: null },
+      { status: 502 },
+    );
+    clearRefreshCookie(response);
+    return response;
+  }
+}

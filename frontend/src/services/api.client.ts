@@ -95,7 +95,9 @@ export class ApiClient {
       });
 
       const data = await this.readResponse<T>(response);
-      const isAuthenticationEndpoint = url.startsWith("/api/auth/login") || url.startsWith("/api/auth/refresh");
+      const isAuthenticationEndpoint = url.startsWith("/api/auth/login")
+        || url.startsWith("/api/auth/refresh")
+        || url.startsWith("/api/auth/logout");
 
       if (response.status === 401 && !hasRetried && !isAuthenticationEndpoint) {
         const refreshedToken = await this.refreshAccessToken();

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -20,9 +20,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [closedForInactivity, setClosedForInactivity] = useState(false);
 
   const { login } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setClosedForInactivity(new URLSearchParams(window.location.search).get("reason") === "inactivity");
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +83,13 @@ export default function LoginPage() {
             Ingresa con tu cuenta para acceder a la gestión de productos
           </p>
         </div>
+
+        {closedForInactivity && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-200 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>Sesión cerrada por inactividad</span>
+          </div>
+        )}
 
         {/* Quick Fill Credentials Buttons (Ideal for evaluation!) */}
         <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-2">

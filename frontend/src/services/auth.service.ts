@@ -23,7 +23,18 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
+    try {
+      await ApiClient.post<void>("/api/auth/logout", {});
+    } catch (error) {
+      // The local session must still be removed if the server is temporarily unavailable.
+      console.warn("No fue posible notificar el cierre de sesión al servidor.", error);
+    } finally {
+      this.clearStoredSession();
+    }
+  }
+
+  static clearStoredSession(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
       localStorage.removeItem("user");

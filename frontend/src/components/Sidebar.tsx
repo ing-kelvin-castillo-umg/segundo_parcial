@@ -11,11 +11,14 @@ import {
   ShieldAlert,
   User as UserIcon,
   Home,
+  Clock3,
+  AlertTriangle,
 } from "lucide-react";
+import { formatSessionTime } from "@/config/session";
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, logout, remainingSeconds, isInactivityWarning } = useAuth();
 
   const navItems = [
     {
@@ -104,8 +107,17 @@ export const Sidebar: React.FC = () => {
           </span>
         </div>
 
+        <div className={`mb-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-semibold ${
+          isInactivityWarning
+            ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+            : "border-slate-700 bg-slate-800/70 text-slate-300"
+        }`}>
+          {isInactivityWarning ? <AlertTriangle className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
+          <span>{isInactivityWarning ? "Sesión por expirar" : "Sesión activa"} · {formatSessionTime(remainingSeconds)}</span>
+        </div>
+
         <button
-          onClick={logout}
+          onClick={() => void logout()}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 rounded-lg transition-colors border border-rose-500/20 hover:border-transparent"
         >
           <LogOut className="w-3.5 h-3.5" />

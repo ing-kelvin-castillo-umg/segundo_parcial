@@ -67,6 +67,17 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return refreshToken.getUser();
     }
 
+    @Override
+    @Transactional
+    public void revokeToken(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) {
+            return;
+        }
+
+        refreshTokenRepository.findByTokenHash(hash(rawToken))
+                .ifPresent(refreshToken -> refreshToken.setRevoked(true));
+    }
+
     private String hash(String rawToken) {
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256")
