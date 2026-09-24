@@ -27,6 +27,7 @@ El proyecto implementa una arquitectura limpia por capas tanto en el **Backend**
 - **Context (`src/context/`)**: Estado reactivo global de autenticación (`AuthContext`).
 - **Renovación de sesión**: El contexto programa el refresh antes del vencimiento y `ApiClient` reintenta una solicitud después de un `401`; si el refresh falla, limpia la sesión y vuelve al login.
 - **Inactividad y logout**: `useIdleTimeout` detecta actividad de teclado, mouse, clic, desplazamiento y táctil. Después de 3 minutos sin actividad, el frontend envía `/api/auth/logout`, limpia la sesión y muestra el motivo en el login. El backend revoca el refresh token en PostgreSQL y bloquea el JWT de acceso mediante una lista negra en memoria hasta su vencimiento.
+- **Diseño visual**: paleta propia `forest`, `mint` y `gold` en Tailwind, con fondos marfil para el panel y verde profundo para las vistas públicas. El catálogo, el carrusel, la tabla, los modales y el acceso se adaptan a escritorio y móvil. Las imágenes externas tienen un respaldo SVG local.
 - **Components (`src/components/`)**:
   - `Carousel`: Carrusel dinámico de productos en la página principal con auto-avance, navegación por flechas e indicadores.
   - `Navbar` & `Sidebar`: Barras de navegación con control de estado y visualización de roles.
@@ -101,6 +102,8 @@ Para obtener la evidencia de la Fase 1, abre las herramientas de desarrollo del 
 Para la Fase 2, Docker Compose configura el access token con una duración de **60 segundos** y el refresh token con **7 días**. Inicia sesión, deja abierta la pestaña **Red** con el filtro **Fetch/XHR** y espera aproximadamente 45 segundos. Aparecerá `POST /api/auth/refresh` con estado `200`, seguido de una sesión que sigue activa. Cada refresh token se puede usar una sola vez; la respuesta entrega otro nuevo. En ejecución local sin Docker, el access token dura 5 minutos por defecto; estos plazos se ajustan con `JWT_EXPIRATION_MS` y `JWT_REFRESH_EXPIRATION_MS` en el servidor Spring Boot.
 
 Para la Fase 3, inicia sesión y observa el contador **Cierre por inactividad** en el sidebar. Abre **Red → Fetch/XHR**, activa **Preserve log / Conservar registro** y deja de interactuar con la página durante **3 minutos**. Al vencer el contador verás `POST /api/auth/logout` con estado `200` y la redirección a `/login?reason=idle`, donde aparece “Sesión cerrada por inactividad”. Para el PDF conviene capturar el contador cerca de cero y luego la pantalla de login junto con la petición de logout.
+
+Para la Fase 4, captura la página pública en `/` mostrando el nuevo carrusel y, después de iniciar sesión, el panel `/dashboard/products` con el sidebar verde, las tarjetas de resumen y la tabla. Una captura adicional del modal **Nuevo Producto** o de la vista móvil permite mostrar los estados y la adaptación responsiva.
 
 ---
 
