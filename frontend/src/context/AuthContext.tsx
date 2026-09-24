@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
@@ -11,9 +11,20 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
+  logoutReason: "manual" | "inactivity" | null;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: "manual" | "inactivity") => Promise<void>;
 }
+
+const INACTIVITY_LIMIT_MS = 3 * 60 * 1000;
+const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
+  "mousemove",
+  "keydown",
+  "click",
+  "scroll",
+  "touchstart",
+  "pointerdown",
+];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,7 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [logoutReason, setLogoutReason] = useState<"manual" | "inactivity" | null>(null);
+  const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
+  const isAuthenticated = !!token && !!user;
   const router = useRouter();
+  const logoutStartedRef = useRef(false);
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const session = AuthService.getStoredSession();
@@ -34,19 +50,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     const session = await AuthService.login({ username, password });
+    logoutStartedRef.current = false;
+    setLogoutReason(null);
     setUser(session.user);
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
+  const logout = useCallback(async (reason: "manual" | "inactivity" = "manual") => {
+    if (logoutStartedRef.current) return;
+    logoutStartedRef.current = true;
+    setLogoutReason(reason);
     setUser(null);
     setToken(null);
-    router.push("/");
-  };
+    await AuthService.logout();
+    router.replace(reason === "inactivity" ? "/login?reason=inactivity" : "/");
+  }, [router]);
 
-  const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
-  const isAuthenticated = !!token && !!user;
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const resetInactivityTimer = () => {
+      if (logoutStartedRef.current) return;
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = setTimeout(() => {
+        void logout("inactivity");
+      }, INACTIVITY_LIMIT_MS);
+    };
+
+    ACTIVITY_EVENTS.forEach((eventName) => {
+      window.addEventListener(eventName, resetInactivityTimer, { passive: true });
+    });
+    resetInactivityTimer();
+
+    return () => {
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      ACTIVITY_EVENTS.forEach((eventName) => {
+        window.removeEventListener(eventName, resetInactivityTimer);
+      });
+    };
+  }, [isAuthenticated, logout]);
 
   return (
     <AuthContext.Provider
@@ -56,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isAdmin,
         loading,
+        logoutReason,
         login,
         logout,
       }}

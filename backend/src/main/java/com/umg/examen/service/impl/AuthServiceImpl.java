@@ -96,6 +96,20 @@ public class AuthServiceImpl implements AuthService {
         return issueTokens(user, accessToken);
     }
 
+    @Override
+    @Transactional
+    public void logout(String rawRefreshToken, String accessToken) {
+        if (rawRefreshToken != null && !rawRefreshToken.isBlank()) {
+            refreshTokenRepository.findByTokenHashForUpdate(hashRefreshToken(rawRefreshToken))
+                    .ifPresent(refreshToken -> {
+                        if (refreshToken.getRevokedAt() == null) {
+                            refreshToken.setRevokedAt(LocalDateTime.now());
+                        }
+                    });
+        }
+        tokenProvider.revokeToken(accessToken);
+    }
+
     private AuthResponse issueTokens(User user, String accessToken) {
         byte[] randomBytes = new byte[64];
         SECURE_RANDOM.nextBytes(randomBytes);
