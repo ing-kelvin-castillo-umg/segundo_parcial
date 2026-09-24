@@ -17,6 +17,9 @@ import {
   RefreshCw,
   CheckCircle,
   AlertTriangle,
+  Package,
+  Wallet,
+  Tags,
 } from "lucide-react";
 
 export default function ProductsPage() {
@@ -57,6 +60,11 @@ export default function ProductsPage() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Métricas del inventario
+  const totalStock = products.reduce((sum, p) => sum + (p.stock || 0), 0);
+  const inventoryValue = products.reduce((sum, p) => sum + (p.price || 0) * (p.stock || 0), 0);
+  const categoryCount = new Set(products.map((p) => p.category).filter(Boolean)).size;
 
   // View Handler
   const handleView = (product: Product) => {
@@ -127,14 +135,14 @@ export default function ProductsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Boxes className="w-4 h-4 text-blue-600" />
+          <div className="flex items-center gap-2 text-ink-500 text-xs font-semibold uppercase tracking-wider mb-1">
+            <Boxes className="w-4 h-4 text-brand-600" />
             <span>Módulo de Inventario</span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-ink-900 tracking-tight">
             Gestión de Productos
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-ink-500 mt-1">
             Consulta, busca y gestiona el inventario de productos en tiempo real.
           </p>
         </div>
@@ -145,14 +153,14 @@ export default function ProductsPage() {
             onClick={loadProducts}
             disabled={loading}
             title="Recargar listado"
-            className="p-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-ink-300 bg-white hover:bg-ink-50 text-ink-600 transition-colors shadow-sm disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-blue-600" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-brand-600" : ""}`} />
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-700">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-ink-200 shadow-sm text-xs font-semibold text-ink-700">
             {isAdmin ? (
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-accent-600" />
             ) : (
               <UserIcon className="w-4 h-4 text-emerald-600" />
             )}
@@ -160,7 +168,7 @@ export default function ProductsPage() {
             <span
               className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                 isAdmin
-                  ? "bg-indigo-100 text-indigo-800"
+                  ? "bg-accent-100 text-accent-800"
                   : "bg-emerald-100 text-emerald-800"
               }`}
             >
@@ -168,6 +176,51 @@ export default function ProductsPage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            label: "Productos",
+            value: products.length.toString(),
+            icon: Package,
+            iconClass: "bg-brand-100 text-brand-700",
+          },
+          {
+            label: "Unidades en stock",
+            value: totalStock.toLocaleString("es-GT"),
+            icon: Boxes,
+            iconClass: "bg-emerald-100 text-emerald-700",
+          },
+          {
+            label: "Valor del inventario",
+            value: `Q ${inventoryValue.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            icon: Wallet,
+            iconClass: "bg-accent-100 text-accent-700",
+          },
+          {
+            label: "Categorías",
+            value: categoryCount.toString(),
+            icon: Tags,
+            iconClass: "bg-ink-100 text-ink-700",
+          },
+        ].map(({ label, value, icon: Icon, iconClass }) => (
+          <div
+            key={label}
+            className="p-4 sm:p-5 rounded-2xl bg-white border border-ink-200 shadow-sm flex items-center gap-3 sm:gap-4 min-w-0"
+          >
+            <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>
+              <Icon className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-ink-500 truncate">{label}</p>
+              <p className="text-lg sm:text-2xl font-black text-ink-900 tabular-nums truncate">
+                {loading ? "—" : value}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Main DataTable */}

@@ -14,7 +14,7 @@ export const IdleWarningModal: React.FC<IdleWarningModalProps> = ({ remainingMs,
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-sm"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="idle-warning-title"
@@ -24,10 +24,10 @@ export const IdleWarningModal: React.FC<IdleWarningModalProps> = ({ remainingMs,
           <Clock className="w-6 h-6" />
         </div>
         <div className="space-y-1">
-          <h2 id="idle-warning-title" className="text-lg font-bold text-slate-900">
+          <h2 id="idle-warning-title" className="text-lg font-bold text-ink-900">
             ¿Sigues ahí?
           </h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-ink-600">
             Por seguridad, tu sesión se cerrará por inactividad en{" "}
             <span className="font-bold text-amber-600 tabular-nums" aria-live="polite">
               {seconds}s
@@ -39,7 +39,7 @@ export const IdleWarningModal: React.FC<IdleWarningModalProps> = ({ remainingMs,
           <button
             type="button"
             onClick={onLogoutNow}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-ink-200 text-ink-700 text-sm font-semibold hover:bg-ink-50 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             <span>Cerrar sesión</span>
@@ -48,7 +48,7 @@ export const IdleWarningModal: React.FC<IdleWarningModalProps> = ({ remainingMs,
             type="button"
             onClick={onStayActive}
             autoFocus
-            className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition-colors"
           >
             Seguir conectado
           </button>
