@@ -15,7 +15,7 @@ import {
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, logout, idleSecondsRemaining } = useAuth();
 
   const navItems = [
     {
@@ -79,6 +79,12 @@ export const Sidebar: React.FC = () => {
 
       {/* User Profile Footer */}
       <div className="p-4 border-t border-slate-800 bg-slate-950/50">
+        <div className="flex items-center justify-between mb-3 px-2 py-1.5 rounded-lg bg-slate-800 text-[11px] text-slate-300">
+          <span>Cierre por inactividad</span>
+          <span className="font-mono font-bold text-white" aria-live="off">
+            {String(Math.floor(idleSecondsRemaining / 60)).padStart(2, "0")}:{String(idleSecondsRemaining % 60).padStart(2, "0")}
+          </span>
+        </div>
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-xs shrink-0 ${isAdmin ? "bg-indigo-600 ring-2 ring-indigo-400" : "bg-emerald-600 ring-2 ring-emerald-400"}`}>
@@ -105,7 +111,7 @@ export const Sidebar: React.FC = () => {
         </div>
 
         <button
-          onClick={logout}
+          onClick={() => void logout()}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 rounded-lg transition-colors border border-rose-500/20 hover:border-transparent"
         >
           <LogOut className="w-3.5 h-3.5" />

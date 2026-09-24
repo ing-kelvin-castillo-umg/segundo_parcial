@@ -1,10 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { User } from "@/entities/user.entity";
 import { AuthService } from "@/services/auth.service";
 import { ApiClient } from "@/services/api.client";
-import { useRouter } from "next/navigation";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 
 interface AuthContextType {
   user: User | null;
@@ -12,8 +12,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
+  idleSecondsRemaining: number;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: "manual" | "idle") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const logoutInProgress = useRef(false);
 
   useEffect(() => {
     const session = AuthService.getStoredSession();
@@ -60,15 +61,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(session.token);
   };
 
-  const logout = () => {
-    AuthService.logout();
-    setUser(null);
-    setToken(null);
-    router.push("/");
+  const logout = async (reason: "manual" | "idle" = "manual") => {
+    if (logoutInProgress.current) return;
+    logoutInProgress.current = true;
+    try {
+      await AuthService.logout();
+    } catch {
+      // Local session cleanup is guaranteed by AuthService.logout().
+    } finally {
+      window.location.replace(reason === "idle" ? "/login?reason=idle" : "/login");
+    }
   };
 
   const isAdmin = !!(user?.roles && user.roles.includes("ROLE_ADMIN"));
   const isAuthenticated = !!token && !!user;
+  const idleSecondsRemaining = useIdleTimeout(isAuthenticated, () => {
+    void logout("idle");
+  });
 
   return (
     <AuthContext.Provider
@@ -78,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isAdmin,
         loading,
+        idleSecondsRemaining,
         login,
         logout,
       }}

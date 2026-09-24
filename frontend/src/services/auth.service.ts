@@ -24,12 +24,36 @@ export class AuthService {
     return AuthMapper.toUserFromResponse(response.data);
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("accessTokenExpiresAt");
-      localStorage.removeItem("user");
+  static clearStoredSession(): void {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessTokenExpiresAt");
+    localStorage.removeItem("user");
+  }
+
+  static async logout(): Promise<void> {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3000);
+    try {
+      if (refreshToken) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ refreshToken }),
+          cache: "no-store",
+          signal: controller.signal,
+        });
+      }
+    } finally {
+      window.clearTimeout(timeout);
+      this.clearStoredSession();
     }
   }
 
@@ -42,7 +66,7 @@ export class AuthService {
     const userStr = localStorage.getItem("user");
 
     if (!token || !refreshToken || !accessTokenExpiresAt || !userStr) {
-      this.logout();
+      this.clearStoredSession();
       return null;
     }
 

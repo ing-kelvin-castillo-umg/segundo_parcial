@@ -25,7 +25,10 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("reason") === "expired") {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    if (reason === "idle") {
+      setError("Sesión cerrada por inactividad");
+    } else if (reason === "expired") {
       setError("La sesión expiró. Inicia sesión nuevamente.");
     }
   }, []);

@@ -39,6 +39,17 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Sesión renovada", authResponse));
     }
 
+    @PostMapping("/logout")
+    @Operation(summary = "Cerrar sesión", description = "Invalida el token de acceso y revoca el refresh token")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @Valid @RequestBody RefreshTokenRequest request) {
+        String accessToken = authorization != null && authorization.startsWith("Bearer ")
+                ? authorization.substring(7) : null;
+        authService.logout(accessToken, request.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.success("Sesión cerrada", null));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Obtener usuario actual", description = "Retorna los datos del usuario autenticado a través del token JWT")

@@ -26,6 +26,7 @@ El proyecto implementa una arquitectura limpia por capas tanto en el **Backend**
 - **BFF (`src/app/api/[...path]/route.ts`)**: Route Handler de Next.js que recibe las llamadas del navegador en `/api/*` y las reenvía a Spring Boot desde el servidor, conservando método, parámetros, cuerpo, estado y encabezados relevantes.
 - **Context (`src/context/`)**: Estado reactivo global de autenticación (`AuthContext`).
 - **Renovación de sesión**: El contexto programa el refresh antes del vencimiento y `ApiClient` reintenta una solicitud después de un `401`; si el refresh falla, limpia la sesión y vuelve al login.
+- **Inactividad y logout**: `useIdleTimeout` detecta actividad de teclado, mouse, clic, desplazamiento y táctil. Después de 3 minutos sin actividad, el frontend envía `/api/auth/logout`, limpia la sesión y muestra el motivo en el login. El backend revoca el refresh token en PostgreSQL y bloquea el JWT de acceso mediante una lista negra en memoria hasta su vencimiento.
 - **Components (`src/components/`)**:
   - `Carousel`: Carrusel dinámico de productos en la página principal con auto-avance, navegación por flechas e indicadores.
   - `Navbar` & `Sidebar`: Barras de navegación con control de estado y visualización de roles.
@@ -99,6 +100,8 @@ Para obtener la evidencia de la Fase 1, abre las herramientas de desarrollo del 
 
 Para la Fase 2, Docker Compose configura el access token con una duración de **60 segundos** y el refresh token con **7 días**. Inicia sesión, deja abierta la pestaña **Red** con el filtro **Fetch/XHR** y espera aproximadamente 45 segundos. Aparecerá `POST /api/auth/refresh` con estado `200`, seguido de una sesión que sigue activa. Cada refresh token se puede usar una sola vez; la respuesta entrega otro nuevo. En ejecución local sin Docker, el access token dura 5 minutos por defecto; estos plazos se ajustan con `JWT_EXPIRATION_MS` y `JWT_REFRESH_EXPIRATION_MS` en el servidor Spring Boot.
 
+Para la Fase 3, inicia sesión y observa el contador **Cierre por inactividad** en el sidebar. Abre **Red → Fetch/XHR**, activa **Preserve log / Conservar registro** y deja de interactuar con la página durante **3 minutos**. Al vencer el contador verás `POST /api/auth/logout` con estado `200` y la redirección a `/login?reason=idle`, donde aparece “Sesión cerrada por inactividad”. Para el PDF conviene capturar el contador cerca de cero y luego la pantalla de login junto con la petición de logout.
+
 ---
 
 ## 📡 Resumen de Endpoints de la API REST
@@ -107,6 +110,7 @@ Para la Fase 2, Docker Compose configura el access token con una duración de **
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/login` | Iniciar sesión y obtener access y refresh tokens | Público |
 | `POST` | `/api/auth/refresh` | Rotar el refresh token y renovar el access token | Público, con refresh token válido |
+| `POST` | `/api/auth/logout` | Revocar refresh token y bloquear el JWT activo | Público, con refresh token |
 | `GET` | `/api/auth/me` | Obtener perfil del usuario en sesión | Autenticado |
 | `GET` | `/api/products` | Listar productos (con soporte `?query=`) | Público / Carrusel |
 | `GET` | `/api/products/{id}` | Obtener detalle de un producto por ID | Público / Autenticado |
@@ -135,7 +139,7 @@ app_segundo_parcial/
 │       │   │   ├── entity/ (Product, RefreshToken, Role, User)
 │       │   │   ├── mapper/ (ProductMapper, UserMapper)
 │       │   │   ├── repository/ (ProductRepository, RoleRepository, UserRepository)
-│       │   │   ├── security/ (CustomUserDetailsService, JwtAuthenticationEntryPoint, JwtAuthenticationFilter, JwtTokenProvider)
+│       │   │   ├── security/ (CustomUserDetailsService, JwtAuthenticationEntryPoint, JwtAuthenticationFilter, JwtTokenProvider, TokenBlacklist)
 │       │   │   └── service/
 │       │   │       ├── AuthService.java
 │       │   │       ├── ProductService.java
@@ -168,6 +172,7 @@ app_segundo_parcial/
 │       │       └── products/page.tsx (DataTable con CRUD y control de roles)
 │       ├── components/ (Navbar, Carousel, Sidebar, DataTable, ProductModals)
 │       ├── context/ (AuthContext)
+│       ├── hooks/ (useIdleTimeout)
 │       ├── dtos/ (auth.dto.ts, product.dto.ts)
 │       ├── entities/ (user.entity.ts, product.entity.ts)
 │       ├── mappers/ (auth.mapper.ts, product.mapper.ts)

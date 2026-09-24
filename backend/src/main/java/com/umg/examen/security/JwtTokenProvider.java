@@ -77,6 +77,16 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
+    public String getTokenId(String token) {
+        return Jwts.parser().verifyWith(getSigningKey()).build()
+                .parseSignedClaims(token).getPayload().getId();
+    }
+
+    public Date getExpiration(String token) {
+        return Jwts.parser().verifyWith(getSigningKey()).build()
+                .parseSignedClaims(token).getPayload().getExpiration();
+    }
+
     public long getExpirationMs() {
         return jwtExpirationMs;
     }

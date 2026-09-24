@@ -10,6 +10,7 @@ import com.umg.examen.repository.RefreshTokenRepository;
 import com.umg.examen.repository.UserRepository;
 import com.umg.examen.security.InvalidRefreshTokenException;
 import com.umg.examen.security.JwtTokenProvider;
+import com.umg.examen.security.TokenBlacklist;
 import com.umg.examen.service.AuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenBlacklist tokenBlacklist;
 
     @Value("${app.jwt.refresh-expiration-ms:604800000}")
     private long refreshExpirationMs;
@@ -47,12 +49,14 @@ public class AuthServiceImpl implements AuthService {
                            JwtTokenProvider tokenProvider,
                            UserRepository userRepository,
                            UserMapper userMapper,
-                           RefreshTokenRepository refreshTokenRepository) {
+                           RefreshTokenRepository refreshTokenRepository,
+                           TokenBlacklist tokenBlacklist) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.tokenBlacklist = tokenBlacklist;
     }
 
     @Override
@@ -93,6 +97,18 @@ public class AuthServiceImpl implements AuthService {
         List<String> roles = user.getRoles().stream().map(role -> role.getName()).toList();
         String accessToken = tokenProvider.generateTokenFromUsername(user.getUsername(), roles);
         return buildAuthResponse(user, accessToken, issueRefreshToken(user));
+    }
+
+    @Override
+    @Transactional
+    public void logout(String accessToken, String rawRefreshToken) {
+        if (accessToken != null && !accessToken.isBlank()) {
+            tokenBlacklist.invalidate(accessToken);
+        }
+        if (rawRefreshToken != null && !rawRefreshToken.isBlank()) {
+            refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
+                    .ifPresent(stored -> stored.setRevoked(true));
+        }
     }
 
     private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
