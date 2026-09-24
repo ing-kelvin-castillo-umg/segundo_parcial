@@ -5,10 +5,10 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <include file="db/changelog/001-create-users-roles.xml"/>
-    <include file="db/changelog/002-insert-roles-users.xml"/>
-    <include file="db/changelog/003-create-products.xml"/>
-    <include file="db/changelog/004-insert-initial-products.xml"/>
-    <include file="db/changelog/005-sync-product-sequence.xml"/>
+    <changeSet id="005-1-sync-product-sequence" author="umg">
+        <sql>
+            SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE((SELECT MAX(id) FROM products), 1), true);
+        </sql>
+    </changeSet>
 
 </databaseChangeLog>

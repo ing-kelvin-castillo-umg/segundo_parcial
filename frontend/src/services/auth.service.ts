@@ -11,6 +11,9 @@ export class AuthService {
 
     if (typeof window !== "undefined") {
       localStorage.setItem("token", session.token);
+      if (session.refreshToken) {
+        localStorage.setItem("refreshToken", session.refreshToken);
+      }
       localStorage.setItem("user", JSON.stringify(session.user));
     }
 
@@ -25,6 +28,7 @@ export class AuthService {
   static logout(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
     }
   }
@@ -33,14 +37,16 @@ export class AuthService {
     if (typeof window === "undefined") return null;
 
     const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken") || undefined;
     const userStr = localStorage.getItem("user");
 
-    if (!token || !userStr) return null;
+    if (!token || !refreshToken || !userStr) return null;
 
     try {
       const user = JSON.parse(userStr) as User;
       return {
         token,
+        refreshToken,
         user,
         isAuthenticated: true,
         isAdmin: user.roles?.includes("ROLE_ADMIN") || false,

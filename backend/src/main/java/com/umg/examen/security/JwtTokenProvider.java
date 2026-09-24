@@ -27,6 +27,9 @@ public class JwtTokenProvider {
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
+    @Value("${app.jwt.refresh-expiration-ms:604800000}")
+    private long refreshExpirationMs;
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -43,6 +46,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())
+                .claim("tokenType", "access")
                 .claim("roles", roles)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -56,7 +60,21 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(username)
+                .claim("tokenType", "access")
                 .claim("roles", roles)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("tokenType", "refresh")
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -70,6 +88,32 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public boolean isRefreshToken(String token) {
+        return hasTokenType(token, "refresh");
+    }
+
+    public boolean isAccessToken(String token) {
+        return hasTokenType(token, "access");
+    }
+
+    private boolean hasTokenType(String token, String expectedType) {
+        Object tokenType = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("tokenType");
+        return expectedType.equals(tokenType);
+    }
+
+    public long getJwtExpirationMs() {
+        return jwtExpirationMs;
+    }
+
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
     }
 
     public boolean validateToken(String authToken) {

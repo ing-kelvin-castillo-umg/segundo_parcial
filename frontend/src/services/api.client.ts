@@ -1,4 +1,4 @@
-import { ApiResponseDto } from "@/dtos/auth.dto";
+import { ApiResponseDto, AuthResponseDto } from "@/dtos/auth.dto";
 
 const API_BASE_URL = "";
 
@@ -10,7 +10,74 @@ export class ApiClient {
     return null;
   }
 
-  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponseDto<T>> {
+  private static getRefreshToken(): string | null {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("refreshToken");
+    }
+    return null;
+  }
+
+  private static clearSession(): void {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+    }
+  }
+
+  private static redirectToLogin(): void {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }
+
+  private static persistAuthResponse(auth: AuthResponseDto): void {
+    if (typeof window === "undefined") return;
+
+    localStorage.setItem("token", auth.token);
+    if (auth.refreshToken) {
+      localStorage.setItem("refreshToken", auth.refreshToken);
+    }
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        username: auth.username,
+        fullName: auth.fullName || auth.username,
+        email: auth.email,
+        roles: auth.roles || [],
+        enabled: true,
+      }),
+    );
+  }
+
+  private static async refreshAccessToken(): Promise<void> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.clearSession();
+      this.redirectToLogin();
+      throw new Error("La sesion expiro. Inicia sesion nuevamente.");
+    }
+
+    const response = await fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    const data = (await response.json()) as ApiResponseDto<AuthResponseDto>;
+    if (!response.ok) {
+      this.clearSession();
+      this.redirectToLogin();
+      throw new Error(data?.message || "No fue posible renovar la sesion.");
+    }
+
+    this.persistAuthResponse(data.data);
+  }
+
+  static async request<T>(endpoint: string, options: RequestInit = {}, allowRefresh = true): Promise<ApiResponseDto<T>> {
     const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const token = this.getToken();
 
@@ -31,6 +98,11 @@ export class ApiClient {
       });
 
       const data = await response.json();
+
+      if (response.status === 401 && allowRefresh && endpoint !== "/api/auth/refresh") {
+        await this.refreshAccessToken();
+        return this.request<T>(endpoint, options, false);
+      }
 
       if (!response.ok) {
         const errorMsg = data?.message || `Error HTTP ${response.status}: ${response.statusText}`;
